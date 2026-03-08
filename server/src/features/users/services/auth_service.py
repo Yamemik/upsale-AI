@@ -5,8 +5,8 @@ from fastapi import HTTPException, status
 
 from src.config.settings import settings
 from src.common.security import verify_password
-from ..models.user_repository import UserRepository
-from ..models.user_models import User
+from ..repositories.user_repository import UserRepository
+from ..models.user_model import User
 
 
 class AuthService:
@@ -19,11 +19,17 @@ class AuthService:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
-                headers={"WWW-Authenticate": "Bearer"}
+                headers={"WWW-Authenticate": "Bearer"},
             )
         return user
 
-    def create_access_token(self, subject: str, expires_delta: timedelta | None = None) -> str:
-        expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    def create_access_token(
+        self, subject: str, expires_delta: timedelta | None = None
+    ) -> str:
+        expire = datetime.now(timezone.utc) + (
+            expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
         payload = {"exp": expire, "sub": str(subject)}
-        return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+        return jwt.encode(
+            payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+        )

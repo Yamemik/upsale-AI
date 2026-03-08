@@ -2,8 +2,8 @@
 
 from src.config.settings import settings
 from src.common.security import get_password_hash
-from ..models.user_repository import UserRepository
-from ..models.user_models import User
+from ..repositories.user_repository import UserRepository
+from ..models.user_model import User
 from ..schemas.user_schema import UserCreate, UserUpdate
 
 
@@ -77,7 +77,9 @@ class UserService:
         superuser = User(
             login=settings.SUPERUSER_NAME,
             email=settings.SUPERUSER_EMAIL,
-            hashed_password=get_password_hash(settings.SUPERUSER_PASSWORD or ""),
+            hashed_password=get_password_hash(
+                settings.SUPERUSER_PASSWORD or ""
+            ),
             surname="Admin",
             name="Admin",
             is_admin=True,

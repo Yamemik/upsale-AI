@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.features.users.models.user_repository import UserRepository
+from src.features.users.repositories.user_repository import UserRepository
 from src.features.users.services.user_service import UserService
 
 

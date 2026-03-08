@@ -2,7 +2,7 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..schemas.user_schema import UserOut, UserOutWithoutToken, UserUpdate
-from ..models.user_models import User
+from ..models.user_model import User
 from ..dependencies import get_current_user, get_user_service
 from ..services.user_service import UserService
 

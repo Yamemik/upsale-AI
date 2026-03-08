@@ -1,14 +1,14 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from jose.exceptions import ExpiredSignatureError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
 from src.db.session import get_db
 from .services.auth_service import AuthService
-from .models.user_models import User
-from .models.user_repository import UserRepository
+from .models.user_model import User
+from .repositories.user_repository import UserRepository
 from .services.user_service import UserService
 
 
