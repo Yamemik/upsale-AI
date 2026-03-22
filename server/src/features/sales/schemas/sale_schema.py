@@ -28,3 +28,4 @@ class SaleCsvImportResult(BaseModel):
     imported: int
     skipped: int
     errors: list[str]
+    format_detected: str | None = None

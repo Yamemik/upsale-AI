@@ -1,23 +1,61 @@
-from fastapi import FastAPI
+import asyncio
+import logging
 from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 from src.config.settings import settings
 from src.api.v1.router import api_router
 from src.db.init_db import init_db
-from src.db.session import engine
+from src.db.session import AsyncSessionLocal, engine
+
+logger = logging.getLogger(__name__)
+
+
+async def _1c_auto_sync_loop() -> None:
+    """Периодическое дополнение sales из 1С (см. INTEGRATION_1C_AUTO_SYNC_*)."""
+    interval = max(1, settings.INTEGRATION_1C_AUTO_SYNC_INTERVAL_HOURS) * 3600
+    while True:
+        try:
+            from src.features.integration_1s.services.onec_sales_import_service import (
+                import_onec_sales_from_odata,
+            )
+
+            async with AsyncSessionLocal() as session:
+                result = await import_onec_sales_from_odata(session, settings)
+                logger.info(
+                    "1C auto-sync: imported=%s date_from=%s",
+                    result.get("imported"),
+                    result.get("date_from"),
+                )
+        except Exception:
+            logger.exception("1C auto-sync failed")
+        await asyncio.sleep(interval)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # await run_migrations_if_needed()
-    
     await init_db()
-    
+
+    task: asyncio.Task | None = None
+    if (
+        settings.INTEGRATION_1C_AUTO_SYNC_ENABLED
+        and settings.INTEGRATION_1C_BASE_URL
+        and settings.INTEGRATION_1C_USERNAME
+    ):
+        task = asyncio.create_task(_1c_auto_sync_loop())
+
     yield
-    
-    # 🔴 Выполняется при остановке приложения (опционально)
+
+    if task:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
     await engine.dispose()
 
 

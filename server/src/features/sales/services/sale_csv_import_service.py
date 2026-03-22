@@ -10,7 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config.settings import settings
 from src.features.inventory.repositories.warehouse_repository import WarehouseRepository
 from src.features.products.repositories.product_repository import ProductRepository
-from src.features.sales.csv_import_mapping import row_dict_from_csv_row, split_core_and_extras
+from src.features.sales.csv_import_mapping import (
+    is_kaggle_sales_train_headers,
+    normalize_csv_header,
+    row_dict_from_csv_row,
+    split_core_and_extras,
+)
 from src.features.sales.models.sale_model import Sale
 from src.features.sales.repositories.sale_repository import SalesRepository
 
@@ -39,6 +44,34 @@ def _parse_date(raw: object) -> date:
     raise ValueError(f"unrecognized date: {s!r}")
 
 
+def _cell_by_norm_header(
+    headers: list[str], values: list[str], column: str
+) -> str:
+    for i, h in enumerate(headers):
+        if normalize_csv_header(h) == column:
+            return str(values[i]).strip() if i < len(values) else ""
+    raise ValueError(f"missing column: {column}")
+
+
+def _kaggle_extras(headers: list[str], values: list[str]) -> dict[str, object]:
+    fixed = {
+        "date",
+        "item_id",
+        "shop_id",
+        "item_price",
+        "item_cnt_day",
+    }
+    extras: dict[str, object] = {}
+    for i, h in enumerate(headers):
+        key = normalize_csv_header(h)
+        if key in fixed:
+            continue
+        raw = str(values[i]).strip() if i < len(values) else ""
+        if raw:
+            extras[key] = raw
+    return extras
+
+
 class SaleCsvImportService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -46,16 +79,37 @@ class SaleCsvImportService:
         self.products = ProductRepository(db)
         self.warehouses = WarehouseRepository(db)
 
-    async def import_csv_bytes(self, data: bytes) -> dict[str, object]:
+    async def import_csv_bytes(
+        self,
+        data: bytes,
+        *,
+        import_format: str = "auto",
+    ) -> dict[str, object]:
         text = data.decode("utf-8-sig")
         reader = csv.reader(io.StringIO(text))
         rows = list(reader)
         if not rows:
-            return {"imported": 0, "skipped": 0, "errors": ["empty file"]}
+            return {
+                "imported": 0,
+                "skipped": 0,
+                "errors": ["empty file"],
+                "format_detected": None,
+            }
 
         headers = [h.strip() for h in rows[0]]
         if not any(headers):
-            return {"imported": 0, "skipped": 0, "errors": ["no header row"]}
+            return {
+                "imported": 0,
+                "skipped": 0,
+                "errors": ["no header row"],
+                "format_detected": None,
+            }
+
+        use_kaggle = import_format == "kaggle" or (
+            import_format == "auto" and is_kaggle_sales_train_headers(headers)
+        )
+        if import_format == "legacy":
+            use_kaggle = False
 
         imported = 0
         skipped = 0
@@ -70,7 +124,10 @@ class SaleCsvImportService:
             if not any(str(v).strip() for v in values):
                 continue
             try:
-                sale = await self._row_to_sale(headers, values)
+                if use_kaggle:
+                    sale = await self._row_to_sale_kaggle(headers, values)
+                else:
+                    sale = await self._row_to_sale(headers, values)
             except (ValueError, TypeError, KeyError) as e:
                 skipped += 1
                 errors.append(f"row {i}: {e}")
@@ -84,7 +141,13 @@ class SaleCsvImportService:
         if batch:
             await self.sales.add_all(batch)
 
-        return {"imported": imported, "skipped": skipped, "errors": errors}
+        fmt = "kaggle_sales_train" if use_kaggle else "legacy"
+        return {
+            "imported": imported,
+            "skipped": skipped,
+            "errors": errors,
+            "format_detected": fmt,
+        }
 
     async def _row_to_sale(self, headers: list[str], values: list[str]) -> Sale:
         padded = list(values) + [""] * max(0, len(headers) - len(values))
@@ -140,6 +203,45 @@ class SaleCsvImportService:
             import_extras=extras if extras else None,
         )
 
+    async def _row_to_sale_kaggle(self, headers: list[str], values: list[str]) -> Sale:
+        padded = list(values) + [""] * max(0, len(headers) - len(values))
+        date_raw = _cell_by_norm_header(headers, padded, "date")
+        item_raw = _cell_by_norm_header(headers, padded, "item_id")
+        shop_raw = _cell_by_norm_header(headers, padded, "shop_id")
+        price_raw = _cell_by_norm_header(headers, padded, "item_price")
+        qty_raw = _cell_by_norm_header(headers, padded, "item_cnt_day")
+
+        sale_date = _parse_date(date_raw)
+        item_id = int(float(item_raw.replace(",", ".")))
+        shop_id = int(float(shop_raw.replace(",", ".")))
+        price = _parse_float(price_raw)
+        quantity = _parse_float(qty_raw)
+
+        pext = f"kaggle_item_{item_id}"
+        wext = f"kaggle_shop_{shop_id}"
+        product = await self.products.get_or_create_by_external_id(
+            pext,
+            f"Item {item_id}",
+            category="",
+        )
+        warehouse = await self.warehouses.get_or_create_by_external_id(
+            wext,
+            f"Shop {shop_id}",
+        )
+
+        extras = _kaggle_extras(headers, padded)
+        revenue = quantity * price
+
+        return Sale(
+            product_id=product.id,
+            warehouse_id=warehouse.id,
+            sale_date=sale_date,
+            quantity=quantity,
+            price=price,
+            revenue=revenue,
+            import_extras=extras if extras else None,
+        )
+
 
 async def run_sales_csv_seed_if_configured(session: AsyncSession) -> None:
     path = settings.SALES_SEED_CSV_PATH
@@ -156,7 +258,10 @@ async def run_sales_csv_seed_if_configured(session: AsyncSession) -> None:
         logger.warning("SALES_SEED_CSV_PATH is set but file missing: %s", path)
         return
     data = p.read_bytes()
-    result = await SaleCsvImportService(session).import_csv_bytes(data)
+    result = await SaleCsvImportService(session).import_csv_bytes(
+        data,
+        import_format=settings.SALES_IMPORT_DEFAULT_FORMAT,
+    )
     logger.info(
         "Sales CSV seed from %s: imported=%s skipped=%s",
         path,

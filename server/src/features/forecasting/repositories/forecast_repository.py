@@ -24,3 +24,9 @@ class ForecastRepository:
         result = await self.db.execute(select(Forecast))
         return result.scalars().all()
 
+    async def add_all(self, forecasts: list[Forecast]) -> None:
+        if not forecasts:
+            return
+        self.db.add_all(forecasts)
+        await self.db.commit()
+

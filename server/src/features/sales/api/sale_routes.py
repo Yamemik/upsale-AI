@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from typing import Literal
+
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 
 from ..dependencies import get_sale_csv_import_service, get_sales_service
 from ..schemas.sale_schema import SaleCreate, SaleCsvImportResult, SaleResponse
@@ -39,12 +41,17 @@ class SaleRoutes:
         )
         async def import_sales_csv(
             file: UploadFile = File(...),
+            import_format: Literal["auto", "kaggle", "legacy"] = Query(
+                "auto",
+                description="auto: Kaggle sales_train по заголовкам; kaggle/legacy — принудительно",
+            ),
             service: SaleCsvImportService = Depends(get_sale_csv_import_service),
         ):
             data = await file.read()
-            result = await service.import_csv_bytes(data)
+            result = await service.import_csv_bytes(data, import_format=import_format)
             return SaleCsvImportResult(
                 imported=result["imported"],
                 skipped=result["skipped"],
                 errors=result["errors"],
+                format_detected=result.get("format_detected"),
             )

@@ -1,0 +1,39 @@
+Шаблон выгрузки под датасет Kaggle «Predict Future Sales»
+https://www.kaggle.com/c/competitive-data-science-predict-future-sales/data
+
+Файлы и колонки (как в соревновании):
+- sales_train.csv: date, date_block_num, shop_id, item_id, item_price, item_cnt_day
+  date — дд/мм/гггг; date_block_num — номер месяца от первого месяца в выборке (0, 1, …);
+  shop_id, item_id — целые идентификаторы (в API они назначаются стабильно по ключам 1С).
+- shops.csv: shop_name, shop_id
+- items.csv: item_name, item_id, item_category_id
+- item_categories.csv: item_category_name, item_category_id
+
+Сервер (этот проект): GET /api/v1/integration/1c/export/kaggle-dataset
+с заголовком X-API-KEY — возвращает ZIP с четырьмя CSV из OData.
+
+Первичная история: POST /api/v1/sales/import/csv (файл sales_train.csv), параметр import_format=auto
+по умолчанию распознаёт Kaggle. Дополнение из 1С в БД: POST /api/v1/integration/1c/sync-sales-history
+с X-API-KEY; граница даты — max(sale_date) с overlap или lookback (см. .env).
+
+Фоновый импорт из 1С: INTEGRATION_1C_AUTO_SYNC_ENABLED=true,
+INTEGRATION_1C_AUTO_SYNC_INTERVAL_HOURS=24 (ежедневно) или 168 (еженедельно).
+
+Настройки окружения (пример):
+  INTEGRATION_1C_BASE_URL=https://<сервер>/<публикация>/odata/standard.odata
+  INTEGRATION_1C_USERNAME=...
+  INTEGRATION_1C_PASSWORD=...
+При других именах сущностей в вашей конфигурации измените в коде/настройках:
+  INTEGRATION_1C_ODATA_DOCUMENT_PATH
+  INTEGRATION_1C_ODATA_EXPAND_LINE_ITEMS  (обычно табличная часть «Товары»)
+  INTEGRATION_1C_ODATA_SHOP_CATALOG       (например Catalog_Склады)
+  INTEGRATION_1C_ODATA_ITEM_CATALOG       (например Catalog_Номенклатура)
+
+OData (проверка в браузере или Postman):
+  GET .../Document_РеализацияТоваровУслуг?$format=json&$expand=Товары&$top=1
+
+Ручная выгрузка из 1С без API:
+  Соберите запросы/обработку, которые выгружают строки продаж (дата, склад, номенклатура,
+  количество, цена) и справочники складов и номенклатуры с родителем (группа = категория),
+  затем сопоставьте целочисленные shop_id/item_id/item_category_id и сохраните CSV в том же
+  формате колонок, что выше.

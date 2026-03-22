@@ -8,6 +8,10 @@
 lag_*, rolling_mean_*, stock_level, day_of_week, month попадают в import_extras
 до появления отдельных колонок в модели.
 
+Формат Kaggle «Predict Future Sales» (sales_train.csv): date, date_block_num,
+shop_id, item_id, item_price, item_cnt_day — обрабатывается отдельной веткой
+импорта (см. SaleCsvImportService), по умолчанию автоопределение по заголовкам.
+
 Расширение: register_sale_csv_alias("заголовок", "логическое_поле") или правки
 SALE_CSV_HEADER_ALIASES и обработки в SaleCsvImportService._row_to_sale.
 """
@@ -76,6 +80,13 @@ def register_sale_csv_alias(normalized_header: str, logical_field: str) -> None:
 
 def normalize_csv_header(header: str) -> str:
     return header.replace("\ufeff", "").strip().lower().replace(" ", "_")
+
+
+def is_kaggle_sales_train_headers(headers: list[str]) -> bool:
+    """Колонки как в sales_train.csv (Kaggle Predict Future Sales)."""
+    norm = {normalize_csv_header(h) for h in headers if h and str(h).strip()}
+    required = {"date", "item_id", "shop_id", "item_price", "item_cnt_day"}
+    return required.issubset(norm)
 
 
 def logical_field_for_header(header: str) -> str:
