@@ -22,3 +22,9 @@ class SaleResponse(SaleBase):
 
     class Config:
         from_attributes = True
+
+
+class SaleCsvImportResult(BaseModel):
+    imported: int
+    skipped: int
+    errors: list[str]

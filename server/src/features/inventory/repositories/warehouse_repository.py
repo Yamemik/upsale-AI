@@ -20,6 +20,12 @@ class WarehouseRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_external_id(self, external_id: str) -> Warehouse | None:
+        result = await self.db.execute(
+            select(Warehouse).where(Warehouse.external_id == external_id)
+        )
+        return result.scalar_one_or_none()
+
     async def get_all(self) -> list[Warehouse]:
         result = await self.db.execute(select(Warehouse))
         return result.scalars().all()

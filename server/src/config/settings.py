@@ -2,13 +2,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "FastAPI Template"
+    APP_NAME: str = "FastAPI Upsale-AI"
     DEBUG: bool = True
 
     # database
     DATABASE_URL: str
     DATABASE_URL_SYNC: str
     USE_MIGRATIONS: bool = False
+
+    # первичная загрузка sales из CSV (ВКР / сиды); пусто = отключено
+    SALES_SEED_CSV_PATH: str | None = None
+    SALES_SEED_ONLY_IF_EMPTY: bool = True
 
     # superuser
     SUPERUSER_NAME: str = "admin"

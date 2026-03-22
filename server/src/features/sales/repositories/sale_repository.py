@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.sale_model import Sale
@@ -24,3 +24,10 @@ class SalesRepository:
         )
         return result.scalars().all()
 
+    async def count(self) -> int:
+        result = await self.db.execute(select(func.count()).select_from(Sale))
+        return int(result.scalar_one())
+
+    async def add_all(self, sales: list[Sale]) -> None:
+        self.db.add_all(sales)
+        await self.db.commit()

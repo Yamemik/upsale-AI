@@ -1,0 +1,4 @@
+date,product_id,warehouse_id,sales,lag_1,lag_7,rolling_mean_7,price,stock_level,day_of_week,month
+2023-01-10,100245,1,5,4,6,5.2,1200,45,2,1
+2023-01-11,100245,1,7,5,5,5.4,1200,40,3,1
+2023-01-12,100245,1,6,7,4,5.6,1200,38,4,1

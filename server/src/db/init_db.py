@@ -5,6 +5,9 @@ from sqlalchemy import text
 from src.db.session import engine, AsyncSessionLocal
 from src.db.base import Base
 from src.db.init_superuser import create_superuser_if_not_exists
+from src.features.sales.services.sale_csv_import_service import (
+    run_sales_csv_seed_if_configured,
+)
 from src.db.run_migrations import run_migrations_if_needed
 from src.config.settings import settings
 
@@ -33,6 +36,7 @@ async def init_db():
     elif alembic_present:
         print("ℹ Alembic найден, но миграции отключены (USE_MIGRATIONS=False).")
 
-    # Создаём суперюзера
+    # Создаём суперюзера; при SALES_SEED_CSV_PATH — первичный импорт датасета (например ВКР)
     async with AsyncSessionLocal() as session:
         await create_superuser_if_not_exists(session)
+        await run_sales_csv_seed_if_configured(session)
