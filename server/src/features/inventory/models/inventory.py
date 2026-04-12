@@ -16,5 +16,5 @@ class Inventory(Base):
 
     updated_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    product = relationship("Product")
-    warehouse = relationship("Warehouse")
+    product = relationship("Product", back_populates="inventory_rows")
+    warehouse = relationship("Warehouse", back_populates="inventory_rows")

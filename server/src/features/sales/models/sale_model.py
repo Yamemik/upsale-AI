@@ -21,5 +21,5 @@ class Sale(Base):
     # Признаки из датасета ВКР (lag, rolling, stock_level и т.д.) до выделения колонок в схеме
     import_extras = Column(JSON, nullable=True)
 
-    product = relationship("Product")
-    warehouse = relationship("Warehouse")
+    product = relationship("Product", back_populates="sales")
+    warehouse = relationship("Warehouse", back_populates="sales")

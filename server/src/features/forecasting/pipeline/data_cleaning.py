@@ -3,7 +3,7 @@ import pandas as pd
 
 
 class SalesDataCleaningService:
-    """Пропуски и выбросы по ряду продаж (quantity, price)."""
+    """Очистка продаж под Kaggle-пайплайн (пропуски, отрицательная цена, выбросы)."""
 
     def __init__(
         self,
@@ -29,6 +29,7 @@ class SalesDataCleaningService:
 
         if "price" in out.columns:
             out["price"] = pd.to_numeric(out["price"], errors="coerce")
+            out = out[out["price"] >= 0]
             out["price"] = out["price"].ffill().bfill()
         else:
             out["price"] = 0.0

@@ -1,17 +1,19 @@
 from __future__ import annotations
 
+import logging
 import math
-from datetime import date, timedelta
+from datetime import date
 
 import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
 from src.features.forecasting.ml.model_factory import create_regressor
+from src.features.forecasting.ml.shap_explainer import tree_shap_contributions
 from src.features.forecasting.models.forecast import Forecast
 from src.features.forecasting.models.model_metadata import ModelMetadata
 from src.features.forecasting.pipeline.data_cleaning import SalesDataCleaningService
-from src.features.forecasting.pipeline.metrics import mape, rmse
+from src.features.forecasting.pipeline.metrics import rmse
 from src.features.forecasting.pipeline.order_optimization import suggested_order_quantity
 from src.features.forecasting.repositories.forecast_repository import ForecastRepository
 from src.features.forecasting.repositories.model_metadata_repository import (
@@ -25,10 +27,13 @@ from src.features.forecasting.schemas.forecast_schema import (
     ForecastPoint,
     ForecastRequest,
     ForecastResponse,
+    ShapFactorContribution,
     TrainFromDbResponse,
 )
 from src.features.sales.repositories.sale_repository import SalesRepository
 
+
+logger = logging.getLogger(__name__)
 
 MIN_HISTORY_ROWS = 45
 
@@ -50,6 +55,13 @@ def _sales_to_dataframe(sales: list) -> pd.DataFrame:
                 "quantity": float(s.quantity),
                 "price": float(s.price) if s.price is not None else 0.0,
                 "promo": promo,
+                "shop_id": int(s.warehouse_id) if s.warehouse_id is not None else 0,
+                "item_id": int(s.product_id) if s.product_id is not None else 0,
+                "category_id": int(
+                    (s.import_extras or {}).get("category_id")
+                    or (s.import_extras or {}).get("category_key")
+                    or 0
+                ),
             }
         )
     return pd.DataFrame(rows)
@@ -95,10 +107,10 @@ class ForecastingService:
         if feat.empty or len(feat) < 20:
             raise ValueError("После признаков не осталось достаточного числа строк")
 
-        drop_cols = {"sale_date", "quantity"}
+        drop_cols = {"month_start", "item_cnt_month"}
         feature_cols = [c for c in feat.columns if c not in drop_cols]
         X = feat[feature_cols]
-        y = feat["quantity"]
+        y = feat["item_cnt_month"]
 
         split = max(int(len(feat) * 0.8), 10)
         X_train, X_test = X.iloc[:split], X.iloc[split:]
@@ -108,7 +120,6 @@ class ForecastingService:
         estimator = create_regressor(backend)
         estimator.fit(X_train, y_train)
         y_pred = estimator.predict(X_test)
-        mape_v = mape(y_test.values, y_pred)
         rmse_v = rmse(y_test.values, y_pred)
 
         estimator.fit(X, y)
@@ -117,7 +128,7 @@ class ForecastingService:
             "estimator": estimator,
             "feature_columns": feature_cols,
             "backend": backend,
-            "mape": float(mape_v) if not math.isnan(mape_v) else None,
+            "mape": None,
             "rmse": float(rmse_v),
             "product_key": product_key,
         }
@@ -128,7 +139,7 @@ class ForecastingService:
 
         return {
             "model_path": str(path),
-            "mape": payload["mape"],
+            "mape": None,
             "rmse": payload["rmse"],
             "backend": backend,
             "rows": len(feat),
@@ -175,7 +186,7 @@ class ForecastingService:
     def _recursive_forecast(
         self,
         df_cleaned: pd.DataFrame,
-        horizon_days: int,
+        horizon_months: int,
     ) -> list[float]:
         self._ensure_model()
         assert self._estimator is not None
@@ -184,7 +195,7 @@ class ForecastingService:
         hist = df_cleaned.copy()
         preds: list[float] = []
 
-        for _ in range(horizon_days):
+        for _ in range(horizon_months):
             feat = self.feature_service.create_features(hist.copy())
             if feat.empty:
                 break
@@ -193,7 +204,7 @@ class ForecastingService:
             pred = float(self._estimator.predict(X)[0])
             preds.append(pred)
 
-            next_date = hist["sale_date"].iloc[-1] + pd.Timedelta(days=1)
+            next_date = pd.Timestamp(hist["sale_date"].iloc[-1]) + pd.offsets.MonthBegin(1)
             hist = pd.concat(
                 [
                     hist,
@@ -203,6 +214,9 @@ class ForecastingService:
                             "quantity": [pred],
                             "price": [hist["price"].iloc[-1]],
                             "promo": [0.0],
+                            "shop_id": [hist["shop_id"].iloc[-1] if "shop_id" in hist.columns else 0],
+                            "item_id": [hist["item_id"].iloc[-1] if "item_id" in hist.columns else 0],
+                            "category_id": [hist["category_id"].iloc[-1] if "category_id" in hist.columns else 0],
                         }
                     ),
                 ],
@@ -210,6 +224,34 @@ class ForecastingService:
             )
 
         return preds
+
+    def _build_shap_explanation(
+        self,
+        df_cleaned: pd.DataFrame,
+    ) -> tuple[list[ShapFactorContribution] | None, float | None]:
+        """SHAP для строки признаков, соответствующей последнему месяцу истории (первый шаг прогноза)."""
+        self._ensure_model()
+        assert self._estimator is not None
+        assert self._feature_columns is not None
+        feat = self.feature_service.create_features(df_cleaned.copy())
+        if feat.empty:
+            return None, None
+        last = feat.iloc[-1:]
+        X = last[self._feature_columns]
+        try:
+            raw_list, base = tree_shap_contributions(self._estimator, X)
+            conv = [
+                ShapFactorContribution(
+                    feature_name=x["feature_name"],
+                    feature_value=x["feature_value"],
+                    shap_value=x["shap_value"],
+                )
+                for x in raw_list
+            ]
+            return (conv if conv else None), base
+        except Exception:
+            logger.warning("SHAP explanation failed", exc_info=True)
+            return None, None
 
     async def generate_forecast(
         self,
@@ -230,28 +272,31 @@ class ForecastingService:
             )
 
         cleaned = self.cleaner.clean(df)
-        preds = self._recursive_forecast(cleaned, data.horizon_days)
+        horizon_months = max(1, int(math.ceil(data.horizon_days / 30.0)))
+        shap_explanation, shap_base = self._build_shap_explanation(cleaned)
+        preds = self._recursive_forecast(cleaned, horizon_months)
 
         first_date = (
-            pd.Timestamp(cleaned["sale_date"].iloc[-1]) + pd.Timedelta(days=1)
+            pd.Timestamp(cleaned["sale_date"].iloc[-1]) + pd.offsets.MonthBegin(1)
         ).date()
 
         points: list[ForecastPoint] = []
         for i, p in enumerate(preds):
             points.append(
                 ForecastPoint(
-                    date=first_date + timedelta(days=i),
+                    date=(pd.Timestamp(first_date) + pd.DateOffset(months=i)).date(),
                     predicted_sales=p,
                 )
             )
 
-        horizon_demand = sum(preds) if preds else 0.0
+        predicted_monthly_sales = preds[0] if preds else 0.0
         suggested: float | None = None
         if data.current_stock is not None:
             suggested = suggested_order_quantity(
-                horizon_demand,
+                predicted_monthly_sales,
                 data.current_stock,
                 data.safety_stock,
+                lead_time_months=data.lead_time_months,
             )
 
         forecast_repo = ForecastRepository(db)
@@ -263,6 +308,10 @@ class ForecastingService:
             forecast_date = date.today()
             to_save = [
                 Forecast(
+                    shop_id=wid_store,
+                    item_id=pid,
+                    month=pt.date,
+                    predicted_cnt=pt.predicted_sales,
                     product_id=pid,
                     warehouse_id=wid_store,
                     forecast_date=forecast_date,
@@ -278,10 +327,12 @@ class ForecastingService:
 
         return ForecastResponse(
             product_id=str(pid),
-            horizon=data.horizon_days,
+            horizon=horizon_months,
             forecast=points,
             suggested_order_quantity=suggested,
             model_backend=self._backend,
+            shap_explanation=shap_explanation,
+            shap_base_value=shap_base,
         )
 
     async def get_forecast_history(

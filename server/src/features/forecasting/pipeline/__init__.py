@@ -1,4 +1,4 @@
-"""Конвейер ML: от сырых продаж до прогноза и заказа (см. pipeline.stages)."""
+"""Конвейер ML под Kaggle + 1С: очистка, monthly-features, RMSE, прогноз и заказ."""
 
 from .data_cleaning import SalesDataCleaningService
 from .metrics import mape, rmse

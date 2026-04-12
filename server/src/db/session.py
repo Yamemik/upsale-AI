@@ -1,4 +1,5 @@
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
+
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -7,11 +8,19 @@ from sqlalchemy.ext.asyncio import (
 from src.config.settings import settings
 
 
+def _asyncpg_connect_args() -> dict[str, Any]:
+    args: dict[str, Any] = {"timeout": settings.DATABASE_CONNECT_TIMEOUT}
+    if settings.DATABASE_SSL_DISABLE:
+        args["ssl"] = False
+    return args
+
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
     future=True,
     pool_pre_ping=True,
+    connect_args=_asyncpg_connect_args(),
 )
 
 AsyncSessionLocal = async_sessionmaker(

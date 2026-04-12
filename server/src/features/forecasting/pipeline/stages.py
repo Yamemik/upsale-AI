@@ -1,43 +1,39 @@
 """
 Этапы конвейера (соответствие целевой схеме):
 
-[1С:Предприятие]
+[Kaggle Dataset]
+sales_train.csv, items.csv, shops.csv
         │
         ▼
-[Выгрузка CSV / OData API]     ← sales import + integration_1c
+[Загрузка CSV в систему]          ← Pandas / PostgreSQL
         │
         ▼
-[Загрузка в PostgreSQL]        ← таблицы sales, products, warehouses
+[Предобработка данных]            ← удаление выбросов и пропусков
         │
         ▼
-[Очистка данных]               ← SalesDataCleaningService
-(пропуски, выбросы)
+[Агрегация]                       ← дневные -> месячные продажи
         │
         ▼
 [Feature Engineering]          ← FeatureEngineeringService
-(lag, rolling, календарь, промо)
+(lag_1, lag_3, lag_12, rolling_mean, seasonality)
         │
         ▼
 [Обучение модели]              ← LightGBM / CatBoost
-(LightGBM / CatBoost)
         │
         ▼
-[Оценка качества]              ← mape, rmse
-(MAPE, RMSE)
+[Оценка качества]              ← RMSE (стандарт Kaggle)
         │
         ▼
 [Сохранение модели]            ← ModelManager (.pkl)
-(.pkl / .txt)
         │
         ▼
-[Прогнозирование]              ← ForecastingService.generate_forecast
+[Прогнозирование]              ← test.csv -> item_cnt_month
         │
         ▼
-[Оптимизация запасов]          ← suggested_order_quantity
-(расчет заказа)
+[Оптимизация запасов]          ← формула с lead time
         │
         ▼
-[Отправка в 1С]              ← OneCPushService (REST / OData)
+[Интеграция с 1С]               ← REST API
 """
 
 from enum import Enum
@@ -58,15 +54,15 @@ class PipelineStage(str, Enum):
 
 
 PIPELINE_DESCRIPTION: list[tuple[PipelineStage, str]] = [
-    (PipelineStage.ONE_C_SOURCE, "Источник: 1С:Предприятие"),
-    (PipelineStage.EXPORT_CSV_ODATA, "Выгрузка CSV или OData API"),
-    (PipelineStage.LOAD_POSTGRES, "Загрузка в PostgreSQL"),
-    (PipelineStage.DATA_CLEANING, "Очистка данных (пропуски, выбросы)"),
-    (PipelineStage.FEATURE_ENGINEERING, "Feature Engineering (lag, rolling, календарь, промо)"),
+    (PipelineStage.ONE_C_SOURCE, "Источник: Kaggle dataset / 1С"),
+    (PipelineStage.EXPORT_CSV_ODATA, "Загрузка CSV и справочников"),
+    (PipelineStage.LOAD_POSTGRES, "Сохранение в PostgreSQL"),
+    (PipelineStage.DATA_CLEANING, "Очистка данных (пропуски, price < 0, выбросы)"),
+    (PipelineStage.FEATURE_ENGINEERING, "Feature Engineering (lag_1/3/12, rolling_mean_3, seasonality)"),
     (PipelineStage.TRAIN_MODEL, "Обучение модели (LightGBM / CatBoost)"),
-    (PipelineStage.EVALUATE, "Оценка качества (MAPE, RMSE)"),
+    (PipelineStage.EVALUATE, "Оценка качества (RMSE)"),
     (PipelineStage.SAVE_MODEL, "Сохранение модели (.pkl)"),
     (PipelineStage.FORECAST, "Прогнозирование"),
-    (PipelineStage.INVENTORY_OPTIMIZATION, "Оптимизация запасов (расчёт заказа)"),
+    (PipelineStage.INVENTORY_OPTIMIZATION, "Оптимизация запасов (lead time, safety stock)"),
     (PipelineStage.PUSH_TO_ONE_C, "Отправка в 1С (REST API / OData)"),
 ]

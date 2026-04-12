@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
 from src.db.base import Base
 
 
@@ -18,3 +20,6 @@ class ReorderRecommendation(Base):
     lead_time_days = Column(Integer)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    product = relationship("Product", back_populates="reorder_recommendations")
+    warehouse = relationship("Warehouse", back_populates="reorder_recommendations")

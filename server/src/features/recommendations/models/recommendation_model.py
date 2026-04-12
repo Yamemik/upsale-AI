@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.base import Base
 
@@ -16,3 +16,5 @@ class Recommendation(Base):
     recommended_quantity: Mapped[int]
 
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+
+    product = relationship("Product", back_populates="recommendations")

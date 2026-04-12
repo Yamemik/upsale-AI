@@ -7,6 +7,11 @@ class ForecastRequest(BaseModel):
     product_id: str
     horizon_days: int = 7
     warehouse_id: str | None = None
+    lead_time_months: float = Field(
+        1.0,
+        ge=0.0,
+        description="Срок поставки в месяцах для расчёта заказа",
+    )
     current_stock: float | None = Field(
         None,
         description="Остаток для расчёта рекомендуемого заказа (опционально)",
@@ -19,12 +24,26 @@ class ForecastPoint(BaseModel):
     predicted_sales: float
 
 
+class ShapFactorContribution(BaseModel):
+    feature_name: str
+    feature_value: float | None = None
+    shap_value: float
+
+
 class ForecastResponse(BaseModel):
     product_id: str
     horizon: int
     forecast: list[ForecastPoint]
     suggested_order_quantity: float | None = None
     model_backend: str | None = None
+    shap_explanation: list[ShapFactorContribution] | None = Field(
+        default=None,
+        description="Вклад признаков (SHAP) для первого шага прогноза",
+    )
+    shap_base_value: float | None = Field(
+        default=None,
+        description="Базовое ожидание модели (expected value)",
+    )
 
 
 class TrainFromDbRequest(BaseModel):
