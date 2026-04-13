@@ -3,18 +3,29 @@ import { apiFetch } from '$lib/api/client';
 import type { TokenResponse, UserMe } from '$lib/api/types';
 import { ACCESS_TOKEN_KEY } from '$lib/constants';
 
-let accessToken = $state<string | null>(browser ? localStorage.getItem(ACCESS_TOKEN_KEY) : null);
+function tokenFromBrowser(): string | null {
+	if (!browser) return null;
+	return (
+		localStorage.getItem(ACCESS_TOKEN_KEY) ?? sessionStorage.getItem(ACCESS_TOKEN_KEY)
+	);
+}
+
+let accessToken = $state<string | null>(tokenFromBrowser());
 
 export const auth = $state({
 	currentUser: null as UserMe | null,
 	authLoading: false
 });
 
-export function setAccessToken(token: string | null) {
+export function setAccessToken(token: string | null, rememberMe = true) {
 	accessToken = token;
 	if (browser) {
-		if (token) localStorage.setItem(ACCESS_TOKEN_KEY, token);
-		else localStorage.removeItem(ACCESS_TOKEN_KEY);
+		localStorage.removeItem(ACCESS_TOKEN_KEY);
+		sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+		if (token) {
+			if (rememberMe) localStorage.setItem(ACCESS_TOKEN_KEY, token);
+			else sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+		}
 	}
 }
 
@@ -39,7 +50,11 @@ export function logout() {
 	auth.currentUser = null;
 }
 
-export async function login(username: string, password: string): Promise<void> {
+export async function login(
+	username: string,
+	password: string,
+	rememberMe = true
+): Promise<void> {
 	const body = new URLSearchParams();
 	body.set('username', username);
 	body.set('password', password);
@@ -57,6 +72,6 @@ export async function login(username: string, password: string): Promise<void> {
 	}
 
 	const data = (await res.json()) as TokenResponse;
-	setAccessToken(data.access_token);
+	setAccessToken(data.access_token, rememberMe);
 	await refreshCurrentUser();
 }

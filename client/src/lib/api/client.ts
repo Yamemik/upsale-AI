@@ -1,9 +1,11 @@
 import { ACCESS_TOKEN_KEY } from '$lib/constants';
 import type { ApiError } from './types';
 
-function readStoredToken(): string | null {
+export function readStoredToken(): string | null {
 	if (typeof window === 'undefined') return null;
-	return localStorage.getItem(ACCESS_TOKEN_KEY);
+	return (
+		localStorage.getItem(ACCESS_TOKEN_KEY) ?? sessionStorage.getItem(ACCESS_TOKEN_KEY)
+	);
 }
 
 function apiBase(): string {

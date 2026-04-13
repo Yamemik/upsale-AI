@@ -55,50 +55,50 @@
 </script>
 
 {#if !auth.currentUser}
-	<p class="text-slate-600">Перенаправление на вход…</p>
+	<p class="text-slate-400">Перенаправление на вход…</p>
 {:else}
 	<div class="mx-auto max-w-lg space-y-6">
-		<h1 class="text-2xl font-bold text-slate-900">Профиль</h1>
-		<p class="text-sm text-slate-600">ID: {auth.currentUser.id} · админ: {auth.currentUser.is_admin ? 'да' : 'нет'}</p>
+		<h1 class="text-2xl font-semibold text-white">Профиль</h1>
+		<p class="text-sm text-slate-400">
+			ID: {auth.currentUser.id} · администратор: {auth.currentUser.is_admin ? 'да' : 'нет'}
+		</p>
 		{#if err}
 			<Alert variant="error">{err}</Alert>
 		{/if}
 		{#if ok}
 			<Alert variant="success">{ok}</Alert>
 		{/if}
-		<form class="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm" onsubmit={onsubmit}>
+		<form class="ds-card space-y-4 p-6" onsubmit={onsubmit}>
 			<div>
-				<label class="block text-sm font-medium text-slate-700" for="acc-login">Логин</label>
-				<input id="acc-login" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" bind:value={login} required />
+				<label class="block text-sm font-medium text-slate-300" for="acc-login">Логин</label>
+				<input id="acc-login" class="ds-input" bind:value={login} required />
 			</div>
 			<div class="grid gap-4 sm:grid-cols-3">
 				<div>
-					<label class="block text-sm font-medium text-slate-700" for="acc-sur">Фамилия</label>
-					<input id="acc-sur" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" bind:value={surname} />
+					<label class="block text-sm font-medium text-slate-300" for="acc-sur">Фамилия</label>
+					<input id="acc-sur" class="ds-input" bind:value={surname} />
 				</div>
 				<div>
-					<label class="block text-sm font-medium text-slate-700" for="acc-name">Имя</label>
-					<input id="acc-name" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" bind:value={name} />
+					<label class="block text-sm font-medium text-slate-300" for="acc-name">Имя</label>
+					<input id="acc-name" class="ds-input" bind:value={name} />
 				</div>
 				<div>
-					<label class="block text-sm font-medium text-slate-700" for="acc-patr">Отчество</label>
-					<input id="acc-patr" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" bind:value={patr} />
+					<label class="block text-sm font-medium text-slate-300" for="acc-patr">Отчество</label>
+					<input id="acc-patr" class="ds-input" bind:value={patr} />
 				</div>
 			</div>
 			<div>
-				<label class="block text-sm font-medium text-slate-700" for="acc-pass">Новый пароль</label>
+				<label class="block text-sm font-medium text-slate-300" for="acc-pass">Новый пароль</label>
 				<input
 					id="acc-pass"
 					type="password"
-					class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"
+					class="ds-input"
 					bind:value={password}
 					placeholder="оставьте пустым, чтобы не менять"
 				/>
 			</div>
-			<button
-				type="submit"
-				class="rounded-md bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-				disabled={pending}>{pending ? 'Сохранение…' : 'Сохранить'}</button
+			<button type="submit" class="ds-btn-primary" disabled={pending}
+				>{pending ? 'Сохранение…' : 'Сохранить'}</button
 			>
 		</form>
 	</div>

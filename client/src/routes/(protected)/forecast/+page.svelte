@@ -65,7 +65,7 @@
 			const w = trainWarehouseId.trim();
 			if (w !== '') body.warehouse_id = Number(w);
 			const res = await apiFetch<TrainResult>('/forecast/train', { method: 'POST', json: body });
-			ok = `Обучено: rows=${res.rows_used}, MAPE=${res.mape ?? '—'}, RMSE=${res.rmse ?? '—'}, ${res.backend}`;
+			ok = `Обучено: строк данных: ${res.rows_used}, MAPE: ${res.mape ?? '—'}, RMSE: ${res.rmse ?? '—'}, движок: ${res.backend}`;
 		} catch (e) {
 			err = formatApiError(e);
 		} finally {
@@ -90,7 +90,7 @@
 			if (cs !== '') body.current_stock = Number(cs);
 			const res = await apiFetch<ForecastResult>('/forecast', { method: 'POST', json: body });
 			lastPrediction = res;
-			ok = `Прогноз: ${res.horizon} мес., модель=${res.model_backend ?? '—'}, заказ=${res.suggested_order_quantity ?? '—'}`;
+			ok = `Прогноз: ${res.horizon} мес., модель: ${res.model_backend ?? '—'}, рекомендованный заказ: ${res.suggested_order_quantity ?? '—'}`;
 			await loadHistory();
 		} catch (e) {
 			err = formatApiError(e);
@@ -102,8 +102,8 @@
 
 <div class="space-y-8">
 	<div>
-		<h1 class="text-2xl font-bold text-slate-900">Прогноз</h1>
-		<p class="text-sm text-slate-600">
+		<h1 class="text-2xl font-bold text-slate-100">Прогноз</h1>
+		<p class="text-sm text-slate-400">
 			Графики по месячным шагам модели; интерпретация — SHAP для первого шага прогноза.
 		</p>
 	</div>
@@ -115,9 +115,9 @@
 		<Alert variant="success">{ok}</Alert>
 	{/if}
 
-	<section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-		<h2 class="font-semibold text-slate-900">Конвейер</h2>
-		<ol class="mt-4 list-decimal space-y-2 pl-5 text-sm text-slate-700">
+	<section class="ds-card p-6">
+		<h2 class="font-semibold text-slate-100">Конвейер</h2>
+		<ol class="mt-4 list-decimal space-y-2 pl-5 text-sm text-slate-300">
 			{#each pipeline as step}
 				<li>
 					<span class="font-mono text-xs text-slate-500">{step.id}</span>
@@ -130,9 +130,11 @@
 	</section>
 
 	<div class="grid gap-8 lg:grid-cols-2">
-		<section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-			<h2 class="font-semibold text-slate-900">Обучение по БД</h2>
-			<p class="mt-1 text-xs text-slate-600">POST /forecast/train — product_id (int), warehouse_id (int, опц.)</p>
+		<section class="ds-card p-6">
+			<h2 class="font-semibold text-slate-100">Обучение по БД</h2>
+			<p class="mt-1 text-xs text-slate-400">
+				POST /forecast/train — product_id (целое), warehouse_id (целое, необязательно)
+			</p>
 			<form
 				class="mt-4 space-y-3"
 				onsubmit={(e) => {
@@ -141,24 +143,24 @@
 				}}
 			>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="tp">product_id</label>
-					<input id="tp" type="number" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={trainProductId} required />
+					<label class="text-xs font-medium text-slate-400" for="tp">Код товара (product_id)</label>
+					<input id="tp" type="number" class="mt-1 w-full ds-input text-sm" bind:value={trainProductId} required />
 				</div>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="tw">warehouse_id</label>
-					<input id="tw" type="number" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={trainWarehouseId} placeholder="пусто = все" />
+					<label class="text-xs font-medium text-slate-400" for="tw">Код склада (warehouse_id)</label>
+					<input id="tw" type="number" class="mt-1 w-full ds-input text-sm" bind:value={trainWarehouseId} placeholder="пусто = все" />
 				</div>
 				<button
 					type="submit"
-					class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+					class="ds-btn-primary text-sm disabled:opacity-50"
 					disabled={pending}>Обучить</button
 				>
 			</form>
 		</section>
 
-		<section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-			<h2 class="font-semibold text-slate-900">Прогноз</h2>
-			<p class="mt-1 text-xs text-slate-600">
+		<section class="ds-card p-6">
+			<h2 class="font-semibold text-slate-100">Прогноз</h2>
+			<p class="mt-1 text-xs text-slate-400">
 				<code>horizon_days</code> переводится в целое число месяцев; на графике — помесячный ряд.
 			</p>
 			<form
@@ -169,36 +171,36 @@
 				}}
 			>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="pp">product_id</label>
-					<input id="pp" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={predProductId} required />
+					<label class="text-xs font-medium text-slate-400" for="pp">Код товара (product_id)</label>
+					<input id="pp" class="mt-1 w-full ds-input text-sm" bind:value={predProductId} required />
 				</div>
 				<div class="grid grid-cols-2 gap-3">
 					<div>
-						<label class="text-xs font-medium text-slate-600" for="ph">horizon_days</label>
-						<input id="ph" type="number" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={horizonDays} required />
+						<label class="text-xs font-medium text-slate-400" for="ph">Горизонт, дней (horizon_days)</label>
+						<input id="ph" type="number" class="mt-1 w-full ds-input text-sm" bind:value={horizonDays} required />
 					</div>
 					<div>
-						<label class="text-xs font-medium text-slate-600" for="pw">warehouse_id</label>
-						<input id="pw" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={predWarehouseId} />
+						<label class="text-xs font-medium text-slate-400" for="pw">Код склада (warehouse_id)</label>
+						<input id="pw" class="mt-1 w-full ds-input text-sm" bind:value={predWarehouseId} />
 					</div>
 				</div>
 				<div class="grid grid-cols-2 gap-3">
 					<div>
-						<label class="text-xs font-medium text-slate-600" for="pl">lead_time_months</label>
-						<input id="pl" type="number" step="any" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={leadTimeMonths} />
+						<label class="text-xs font-medium text-slate-400" for="pl">Срок поставки, мес. (lead_time_months)</label>
+						<input id="pl" type="number" step="any" class="mt-1 w-full ds-input text-sm" bind:value={leadTimeMonths} />
 					</div>
 					<div>
-						<label class="text-xs font-medium text-slate-600" for="ps">safety_stock</label>
-						<input id="ps" type="number" step="any" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={safetyStock} />
+						<label class="text-xs font-medium text-slate-400" for="ps">Страховой запас (safety_stock)</label>
+						<input id="ps" type="number" step="any" class="mt-1 w-full ds-input text-sm" bind:value={safetyStock} />
 					</div>
 				</div>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="pc">current_stock</label>
-					<input id="pc" type="number" step="any" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={currentStock} placeholder="опционально" />
+					<label class="text-xs font-medium text-slate-400" for="pc">Текущий остаток (current_stock)</label>
+					<input id="pc" type="number" step="any" class="mt-1 w-full ds-input text-sm" bind:value={currentStock} placeholder="опционально" />
 				</div>
 				<button
 					type="submit"
-					class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+					class="ds-btn-primary text-sm disabled:opacity-50"
 					disabled={pending}>Спрогнозировать</button
 				>
 			</form>
@@ -206,9 +208,9 @@
 	</div>
 
 	{#if lastPrediction && lastPrediction.forecast.length > 0}
-		<section class="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-			<h2 class="font-semibold text-slate-900">График последнего прогноза</h2>
-			<p class="text-xs text-slate-600">
+		<section class="ds-card space-y-4 p-6">
+			<h2 class="font-semibold text-slate-100">График последнего прогноза</h2>
+			<p class="text-xs text-slate-400">
 				Товар <span class="font-mono">{lastPrediction.product_id}</span> · шаги по месяцам: {lastPrediction.forecast.length}
 			</p>
 			{#key lastPrediction.product_id + String(lastPrediction.forecast.at(-1)?.date)}
@@ -223,9 +225,9 @@
 	{/if}
 
 	{#if lastPrediction?.shap_explanation?.length}
-		<section class="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-			<h2 class="font-semibold text-slate-900">Интерпретация (SHAP)</h2>
-			<p class="text-sm leading-relaxed text-slate-700">{shapNarrative}</p>
+		<section class="ds-card space-y-4 p-6">
+			<h2 class="font-semibold text-slate-100">Интерпретация (SHAP)</h2>
+			<p class="text-sm leading-relaxed text-slate-300">{shapNarrative}</p>
 			{#if lastPrediction.shap_base_value != null && Number.isFinite(lastPrediction.shap_base_value)}
 				<p class="text-xs text-slate-500">
 					База модели: <span class="font-mono">{lastPrediction.shap_base_value.toFixed(4)}</span> · сумма SHAP + база ≈ прогноз на
@@ -237,20 +239,20 @@
 			{/key}
 			<div class="overflow-x-auto">
 				<table class="min-w-full text-left text-xs">
-					<thead class="border-b border-slate-200 text-slate-600">
+					<thead class="border-b border-slate-700 text-slate-400">
 						<tr>
 							<th class="py-2 pr-4 font-medium">Признак</th>
 							<th class="py-2 pr-4 font-medium">Значение</th>
-							<th class="py-2 font-medium">SHAP</th>
+							<th class="py-2 font-medium">Вклад SHAP</th>
 						</tr>
 					</thead>
 					<tbody>
 						{#each lastPrediction.shap_explanation ?? [] as row}
-							<tr class="border-b border-slate-100">
-								<td class="py-1.5 pr-4 font-mono text-slate-800">{row.feature_name}</td>
-								<td class="py-1.5 pr-4 text-slate-600">{row.feature_value ?? '—'}</td>
+							<tr class="border-b border-slate-700/60">
+								<td class="py-1.5 pr-4 font-mono text-slate-200">{row.feature_name}</td>
+								<td class="py-1.5 pr-4 text-slate-400">{row.feature_value ?? '—'}</td>
 								<td
-									class="py-1.5 font-mono {row.shap_value >= 0 ? 'text-emerald-700' : 'text-red-700'}"
+									class="py-1.5 font-mono {row.shap_value >= 0 ? 'text-emerald-400' : 'text-red-400'}"
 								>
 									{row.shap_value.toFixed(4)}
 								</td>
@@ -264,23 +266,23 @@
 
 	<section class="space-y-4">
 		<div class="flex flex-wrap items-center justify-between gap-2">
-			<h2 class="font-semibold text-slate-900">История прогнозов</h2>
+			<h2 class="font-semibold text-slate-100">История прогнозов</h2>
 			<button
 				type="button"
-				class="rounded-md border border-slate-300 bg-white px-3 py-1 text-sm hover:bg-slate-50"
+				class="ds-btn-ghost border border-slate-600 px-3 py-1 text-sm"
 				onclick={() => loadHistory()}>Обновить</button
 			>
 		</div>
 		<div class="space-y-6">
 			{#each history as h}
-				<article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+				<article class="ds-card p-4">
 					<div class="flex flex-wrap items-baseline justify-between gap-2">
-						<h3 class="font-medium text-slate-900">
+						<h3 class="font-medium text-slate-100">
 							Товар <span class="font-mono text-sm">{h.product_id}</span>
 						</h3>
 						<span class="text-xs text-slate-500">{h.model_backend ?? ''}</span>
 					</div>
-					<p class="mt-1 text-sm text-slate-600">
+					<p class="mt-1 text-sm text-slate-400">
 						Точек: {h.horizon} · рекомендованный заказ: {h.suggested_order_quantity ?? '—'}
 					</p>
 					{#if h.forecast.length > 0}

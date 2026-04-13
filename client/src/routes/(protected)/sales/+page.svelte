@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Alert from '$lib/components/Alert.svelte';
-	import { apiFetch, apiUrl } from '$lib/api/client';
-	import { ACCESS_TOKEN_KEY } from '$lib/constants';
+	import { apiFetch, apiUrl, readStoredToken } from '$lib/api/client';
 	import { formatApiError } from '$lib/api/errors';
 	import type { Sale, SaleCsvImportResult } from '$lib/api/types';
 
@@ -79,7 +78,7 @@
 		try {
 			const fd = new FormData();
 			fd.append('file', file);
-			const token = typeof localStorage !== 'undefined' ? localStorage.getItem(ACCESS_TOKEN_KEY) : null;
+			const token = readStoredToken();
 			const headers = new Headers();
 			if (token) headers.set('Authorization', `Bearer ${token}`);
 			const q = new URLSearchParams({ import_format: importFormat });
@@ -110,12 +109,12 @@
 <div class="space-y-8">
 	<div class="flex flex-wrap items-end justify-between gap-4">
 		<div>
-			<h1 class="text-2xl font-bold text-slate-900">Продажи</h1>
-			<p class="text-sm text-slate-600">GET/POST <code class="text-xs">/api/v1/sales</code>, импорт CSV</p>
+			<h1 class="text-2xl font-semibold text-white">Продажи</h1>
+			<p class="text-sm text-slate-400">GET/POST <code class="text-xs text-slate-500">/api/v1/sales</code>, импорт CSV</p>
 		</div>
 		<button
 			type="button"
-			class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-slate-50"
+			class="ds-btn-ghost border border-slate-600 px-3 py-1.5 text-sm"
 			onclick={() => load()}>Обновить</button
 		>
 	</div>
@@ -131,95 +130,86 @@
 	{/if}
 
 	<div class="grid gap-8 lg:grid-cols-2">
-		<section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-			<h2 class="font-semibold text-slate-900">Новая продажа</h2>
+		<section class="ds-card p-6">
+			<h2 class="font-semibold text-slate-100">Новая продажа</h2>
 			<form class="mt-4 grid gap-3 sm:grid-cols-2" onsubmit={createSale}>
 				<div class="sm:col-span-2">
-					<label class="text-xs font-medium text-slate-600" for="p-id">product_id</label>
-					<input id="p-id" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={product_id} required />
+					<label class="text-xs font-medium text-slate-400" for="p-id">Код товара (product_id)</label>
+					<input id="p-id" class="ds-input mt-1 text-sm" bind:value={product_id} required />
 				</div>
 				<div class="sm:col-span-2">
-					<label class="text-xs font-medium text-slate-600" for="p-name">product_name</label>
-					<input id="p-name" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={product_name} required />
+					<label class="text-xs font-medium text-slate-400" for="p-name">Наименование (product_name)</label>
+					<input id="p-name" class="ds-input mt-1 text-sm" bind:value={product_name} required />
 				</div>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="p-cat">category</label>
-					<input id="p-cat" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={category} required />
+					<label class="text-xs font-medium text-slate-400" for="p-cat">Категория (category)</label>
+					<input id="p-cat" class="ds-input mt-1 text-sm" bind:value={category} required />
 				</div>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="p-wh">warehouse_id</label>
-					<input id="p-wh" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={warehouse_id} required />
+					<label class="text-xs font-medium text-slate-400" for="p-wh">Код склада (warehouse_id)</label>
+					<input id="p-wh" class="ds-input mt-1 text-sm" bind:value={warehouse_id} required />
 				</div>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="p-date">sale_date</label>
-					<input id="p-date" type="date" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={sale_date} required />
+					<label class="text-xs font-medium text-slate-400" for="p-date">Дата продажи (sale_date)</label>
+					<input id="p-date" type="date" class="ds-input mt-1 text-sm" bind:value={sale_date} required />
 				</div>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="p-qty">quantity</label>
-					<input id="p-qty" type="number" step="any" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={quantity} required />
+					<label class="text-xs font-medium text-slate-400" for="p-qty">Количество (quantity)</label>
+					<input id="p-qty" type="number" step="any" class="ds-input mt-1 text-sm" bind:value={quantity} required />
 				</div>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="p-price">price</label>
-					<input id="p-price" type="number" step="any" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={price} required />
+					<label class="text-xs font-medium text-slate-400" for="p-price">Цена (price)</label>
+					<input id="p-price" type="number" step="any" class="ds-input mt-1 text-sm" bind:value={price} required />
 				</div>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="p-rev">revenue</label>
-					<input id="p-rev" type="number" step="any" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={revenue} required />
+					<label class="text-xs font-medium text-slate-400" for="p-rev">Выручка (revenue)</label>
+					<input id="p-rev" type="number" step="any" class="ds-input mt-1 text-sm" bind:value={revenue} required />
 				</div>
 				<div class="sm:col-span-2">
-					<button
-						type="submit"
-						class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-						disabled={pending}>Сохранить</button
-					>
+					<button type="submit" class="ds-btn-primary text-sm" disabled={pending}>Сохранить</button>
 				</div>
 			</form>
 		</section>
 
-		<section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-			<h2 class="font-semibold text-slate-900">Импорт CSV</h2>
-			<p class="mt-1 text-xs text-slate-600">POST <code>/api/v1/sales/import/csv</code></p>
+		<section class="ds-card p-6">
+			<h2 class="font-semibold text-slate-100">Импорт CSV</h2>
+			<p class="mt-1 text-xs text-slate-400">POST <code class="text-slate-500">/api/v1/sales/import/csv</code></p>
 			<div class="mt-4 space-y-3">
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="fmt">Формат</label>
-					<select id="fmt" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={importFormat}>
-						<option value="auto">auto</option>
-						<option value="kaggle">kaggle</option>
-						<option value="legacy">legacy</option>
+					<label class="text-xs font-medium text-slate-400" for="fmt">Формат</label>
+					<select id="fmt" class="ds-input mt-1 text-sm" bind:value={importFormat}>
+						<option value="auto">авто</option>
+						<option value="kaggle">Kaggle</option>
+						<option value="legacy">устаревший</option>
 					</select>
 				</div>
-				<input bind:this={fileInput} type="file" accept=".csv,text/csv" class="block w-full text-sm" />
-				<button
-					type="button"
-					class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-					disabled={pending}
-					onclick={() => importCsv()}>Загрузить</button
-				>
+				<input bind:this={fileInput} type="file" accept=".csv,text/csv" class="block w-full text-sm text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-sm file:text-slate-200" />
+				<button type="button" class="ds-btn-primary text-sm" disabled={pending} onclick={() => importCsv()}>Загрузить</button>
 			</div>
 		</section>
 	</div>
 
-	<section class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+	<section class="ds-card overflow-x-auto">
 		<table class="min-w-full text-left text-sm">
-			<thead class="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase text-slate-600">
+			<thead class="ds-table-head">
 				<tr>
-					<th class="px-3 py-2">id</th>
+					<th class="px-3 py-2">ID</th>
 					<th class="px-3 py-2">дата</th>
 					<th class="px-3 py-2">товар</th>
 					<th class="px-3 py-2">склад</th>
-					<th class="px-3 py-2 text-right">qty</th>
+					<th class="px-3 py-2 text-right">Кол-во</th>
 					<th class="px-3 py-2 text-right">выручка</th>
 				</tr>
 			</thead>
 			<tbody>
 				{#each sales.slice(0, 200) as s}
-					<tr class="border-b border-slate-100 hover:bg-slate-50/80">
-						<td class="px-3 py-2 font-mono text-xs">{s.id}</td>
-						<td class="px-3 py-2 whitespace-nowrap">{s.sale_date}</td>
-						<td class="px-3 py-2">{s.product_name}</td>
-						<td class="px-3 py-2 font-mono text-xs">{s.warehouse_id}</td>
-						<td class="px-3 py-2 text-right">{s.quantity}</td>
-						<td class="px-3 py-2 text-right">{s.revenue}</td>
+					<tr class="ds-table-row">
+						<td class="px-3 py-2 font-mono text-xs text-slate-400">{s.id}</td>
+						<td class="px-3 py-2 whitespace-nowrap text-slate-300">{s.sale_date}</td>
+						<td class="px-3 py-2 text-slate-200">{s.product_name}</td>
+						<td class="px-3 py-2 font-mono text-xs text-slate-400">{s.warehouse_id}</td>
+						<td class="px-3 py-2 text-right text-slate-300">{s.quantity}</td>
+						<td class="px-3 py-2 text-right text-slate-300">{s.revenue}</td>
 					</tr>
 				{:else}
 					<tr>
@@ -229,7 +219,7 @@
 			</tbody>
 		</table>
 		{#if sales.length > 200}
-			<p class="border-t border-slate-200 px-3 py-2 text-xs text-slate-500">Показаны первые 200 из {sales.length}</p>
+			<p class="border-t border-slate-700 px-3 py-2 text-xs text-slate-500">Показаны первые 200 из {sales.length}</p>
 		{/if}
 	</section>
 </div>

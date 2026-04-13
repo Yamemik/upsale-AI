@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from src.db.base import Base
@@ -13,6 +13,7 @@ class Warehouse(Base):
     name = Column(String)
 
     location = Column(String, nullable=True)
+    shop_id = Column(Integer, ForeignKey("shops.shop_id", ondelete="SET NULL"), nullable=True, index=True)
 
     sales = relationship("Sale", back_populates="warehouse")
     forecasts = relationship("Forecast", back_populates="warehouse")

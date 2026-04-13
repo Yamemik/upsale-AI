@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, Float, String, ForeignKey
+from sqlalchemy import Column, Integer, Float, String, ForeignKey, DateTime
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
 from src.db.base import Base
@@ -15,5 +16,6 @@ class ForecastExplanation(Base):
     feature_value = Column(Float)
 
     shap_value = Column(Float)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     forecast = relationship("Forecast", back_populates="explanations")

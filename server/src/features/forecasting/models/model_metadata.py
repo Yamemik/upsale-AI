@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -19,6 +19,7 @@ class ModelMetadata(Base):
     rmse = Column(Float)
 
     model_path = Column(String)
+    is_active = Column(Boolean, nullable=False, default=True)
 
     trained_at = Column(DateTime(timezone=True), server_default=func.now())
 

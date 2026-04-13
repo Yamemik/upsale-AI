@@ -1,2 +1,48 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
+
+/* Design system: internal admin / SaaS dark */
+@layer base {
+	html {
+		color-scheme: dark;
+	}
+}
+
+@layer components {
+	.ds-surface {
+		@apply min-h-screen bg-[#0F172A] text-[#E2E8F0];
+	}
+	.ds-header {
+		@apply border-b border-slate-700/80 bg-[#1E293B];
+	}
+	.ds-card {
+		@apply rounded-xl border border-slate-700 bg-[#1E293B] shadow-lg shadow-black/20;
+	}
+	.ds-card-hover {
+		@apply transition-shadow duration-200 hover:border-slate-600 hover:shadow-xl hover:shadow-black/25;
+	}
+	.ds-input {
+		@apply mt-1 block w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500;
+	}
+	.ds-btn-primary {
+		@apply inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-500 disabled:pointer-events-none disabled:opacity-50;
+	}
+	.ds-btn-ghost {
+		@apply rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white;
+	}
+	.ds-btn-nav-active {
+		@apply bg-blue-600 text-white;
+	}
+	.ds-table-head {
+		@apply border-b border-slate-700 bg-slate-800/80 text-xs font-medium uppercase tracking-wide text-slate-400;
+	}
+	.ds-table-row {
+		@apply border-b border-slate-700/60 hover:bg-slate-800/50;
+	}
+	.ds-kpi-value {
+		@apply text-2xl font-semibold tracking-tight text-slate-100;
+	}
+	.ds-skeleton {
+		@apply animate-pulse rounded-lg bg-slate-700/60;
+	}
+}

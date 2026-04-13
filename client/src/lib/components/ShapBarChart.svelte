@@ -43,7 +43,13 @@
 				maintainAspectRatio: false,
 				scales: {
 					x: {
-						title: { display: true, text: 'Влияние на прогноз (первый шаг)' }
+						title: { display: true, text: 'Влияние на прогноз (первый шаг)', color: '#94A3B8' },
+						grid: { color: 'rgba(148, 163, 184, 0.12)' },
+						ticks: { color: '#94A3B8' }
+					},
+					y: {
+						grid: { color: 'rgba(148, 163, 184, 0.12)' },
+						ticks: { color: '#94A3B8' }
 					}
 				},
 				plugins: {
@@ -69,7 +75,10 @@
 </script>
 
 {#if top.length > 0}
-	<div class="relative w-full rounded-lg border border-slate-100 bg-white p-2" style:height="{height}px">
+	<div
+		class="relative w-full rounded-xl border border-slate-700 bg-[#1E293B] p-2"
+		style:height="{height}px"
+	>
 		<canvas bind:this={canvas} class="!h-full !w-full max-h-full"></canvas>
 	</div>
 {:else}

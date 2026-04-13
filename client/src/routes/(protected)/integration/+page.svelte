@@ -117,10 +117,10 @@
 
 <div class="space-y-8">
 	<div>
-		<h1 class="text-2xl font-bold text-slate-900">Интеграция 1С</h1>
-		<p class="text-sm text-slate-600">
-			Заголовок <code class="text-xs">X-API-KEY</code> · маршруты
-			<code class="text-xs">/api/v1/integration/1c/*</code>
+		<h1 class="text-2xl font-semibold text-white">Интеграция 1С</h1>
+		<p class="text-sm text-slate-400">
+			Заголовок <code class="text-xs text-slate-500">X-API-KEY</code> · маршруты
+			<code class="text-xs text-slate-500">/api/v1/integration/1c/*</code>
 		</p>
 	</div>
 
@@ -131,76 +131,67 @@
 		<Alert variant="info">{ok}</Alert>
 	{/if}
 
-	<section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-		<h2 class="font-semibold text-slate-900">API-ключ</h2>
-		<p class="mt-1 text-xs text-slate-600">Хранится только в браузере (localStorage).</p>
+	<section class="ds-card p-6">
+		<h2 class="font-semibold text-slate-100">API-ключ</h2>
+		<p class="mt-1 text-xs text-slate-400">Хранится только в браузере (localStorage).</p>
 		<div class="mt-4 flex flex-wrap gap-2">
 			<input
 				type="password"
-				class="min-w-[240px] flex-1 rounded-md border-slate-300 text-sm"
+				class="ds-input min-w-[240px] flex-1 text-sm"
 				bind:value={apiKey}
-				placeholder="X-API-KEY"
+				placeholder="ключ X-API-KEY"
 				autocomplete="off"
 			/>
-			<button
-				type="button"
-				class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-				onclick={saveKey}>Сохранить ключ</button
-			>
+			<button type="button" class="ds-btn-primary text-sm" onclick={saveKey}>Сохранить ключ</button>
 		</div>
 	</section>
 
-	<section class="grid gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:grid-cols-2">
+	<section class="ds-card grid gap-4 p-6 sm:grid-cols-2">
 		<div>
-			<h3 class="font-medium text-slate-900">POST /sync-sales</h3>
-			<p class="mt-1 text-xs text-slate-600">Синхронизация продаж из OData в ответ (без записи в БД по коду маршрута).</p>
+			<h3 class="font-medium text-slate-100">POST /sync-sales</h3>
+			<p class="mt-1 text-xs text-slate-400">Синхронизация продаж из OData в ответ (без записи в БД по коду маршрута).</p>
 			<button
 				type="button"
-				class="mt-3 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50"
+				class="ds-btn-ghost mt-3 border border-slate-600 px-3 py-1.5 text-sm disabled:opacity-50"
 				disabled={pending}
 				onclick={() => syncSales()}>Выполнить</button
 			>
 		</div>
 		<div>
-			<h3 class="font-medium text-slate-900">POST /sync-sales-history</h3>
-			<p class="mt-1 text-xs text-slate-600">Догрузка истории в БД (query: lookback_days, date_from).</p>
+			<h3 class="font-medium text-slate-100">POST /sync-sales-history</h3>
+			<p class="mt-1 text-xs text-slate-400">Догрузка истории в БД (query: lookback_days, date_from).</p>
 			<div class="mt-2 flex flex-wrap gap-2">
-				<input
-					type="number"
-					class="w-28 rounded-md border-slate-300 text-sm"
-					bind:value={lookbackDays}
-					placeholder="lookback"
-				/>
-				<input type="date" class="rounded-md border-slate-300 text-sm" bind:value={dateFrom} />
+				<input type="number" class="ds-input w-28 text-sm" bind:value={lookbackDays} placeholder="дней назад" />
+				<input type="date" class="ds-input text-sm" bind:value={dateFrom} />
 			</div>
 			<button
 				type="button"
-				class="mt-3 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50"
+				class="ds-btn-ghost mt-3 border border-slate-600 px-3 py-1.5 text-sm disabled:opacity-50"
 				disabled={pending}
 				onclick={() => syncHistory()}>Выполнить</button
 			>
 		</div>
 		<div>
-			<h3 class="font-medium text-slate-900">GET /export/kaggle-dataset</h3>
-			<p class="mt-1 text-xs text-slate-600">ZIP с CSV в формате Kaggle.</p>
+			<h3 class="font-medium text-slate-100">GET /export/kaggle-dataset</h3>
+			<p class="mt-1 text-xs text-slate-400">ZIP с CSV в формате Kaggle.</p>
 			<button
 				type="button"
-				class="mt-3 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50"
+				class="ds-btn-ghost mt-3 border border-slate-600 px-3 py-1.5 text-sm disabled:opacity-50"
 				disabled={pending}
 				onclick={() => downloadKaggle()}>Скачать ZIP</button
 			>
 		</div>
 		<div class="sm:col-span-2">
-			<h3 class="font-medium text-slate-900">POST /push/orders</h3>
-			<p class="mt-1 text-xs text-slate-600">Тело: <code>{"{ \"orders\": [ ... ] }"}</code></p>
+			<h3 class="font-medium text-slate-100">POST /push/orders</h3>
+			<p class="mt-1 text-xs text-slate-400">Тело: <code class="text-slate-500">{"{ \"orders\": [ ... ] }"}</code></p>
 			<textarea
-				class="mt-2 w-full rounded-md border-slate-300 font-mono text-xs"
+				class="ds-input mt-2 w-full font-mono text-xs"
 				rows="8"
 				bind:value={pushJson}
 			></textarea>
 			<button
 				type="button"
-				class="mt-3 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+				class="ds-btn-primary mt-3 text-sm disabled:opacity-50"
 				disabled={pending}
 				onclick={() => pushOrders()}>Отправить</button
 			>

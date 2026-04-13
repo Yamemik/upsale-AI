@@ -23,7 +23,7 @@
 	$effect(() => {
 		if (!browser || auth.authLoading) return;
 		if (auth.currentUser && !auth.currentUser.is_admin) {
-			void goto('/');
+			void goto('/dashboard');
 		}
 	});
 
@@ -75,11 +75,17 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Администрирование — Upsale AI</title>
+</svelte:head>
+
 {#if auth.currentUser?.is_admin}
 	<div class="space-y-8">
 		<div>
-			<h1 class="text-2xl font-bold text-slate-900">Админка</h1>
-			<p class="mt-1 text-sm text-slate-600">Создание учётных записей (публичная регистрация отключена).</p>
+			<h1 class="text-2xl font-semibold text-white">Администрирование</h1>
+			<p class="mt-1 text-sm text-slate-400">
+				Управление учётными записями: создание пользователей (публичная регистрация отключена).
+			</p>
 		</div>
 
 		{#if err}
@@ -89,76 +95,78 @@
 			<Alert variant="success">{ok}</Alert>
 		{/if}
 
-		<section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-			<h2 class="font-semibold text-slate-900">Новый пользователь</h2>
-			<p class="mt-1 text-xs text-slate-600">POST <code>/api/v1/users</code> — только для администратора.</p>
+		<section class="ds-card p-6">
+			<h2 class="font-semibold text-slate-100">Новый пользователь</h2>
+			<p class="mt-1 text-xs text-slate-400">POST <code class="text-slate-500">/api/v1/users</code> — только для администратора.</p>
 			<form class="mt-4 grid max-w-xl gap-3" onsubmit={onsubmit}>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="a-login">Логин</label>
-					<input id="a-login" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={login} required />
+					<label class="text-xs font-medium text-slate-400" for="a-login">Логин</label>
+					<input id="a-login" class="ds-input mt-1 text-sm" bind:value={login} required />
 				</div>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="a-pass">Пароль</label>
+					<label class="text-xs font-medium text-slate-400" for="a-pass">Пароль</label>
 					<input
 						id="a-pass"
 						type="password"
-						class="mt-1 w-full rounded-md border-slate-300 text-sm"
+						class="ds-input mt-1 text-sm"
 						bind:value={password}
 						required
 						autocomplete="new-password"
 					/>
 				</div>
 				<div>
-					<label class="text-xs font-medium text-slate-600" for="a-email">Email</label>
-					<input id="a-email" type="email" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={email} />
+					<label class="text-xs font-medium text-slate-400" for="a-email">Эл. почта</label>
+					<input id="a-email" type="email" class="ds-input mt-1 text-sm" bind:value={email} />
 				</div>
 				<div class="grid gap-3 sm:grid-cols-3">
 					<div>
-						<label class="text-xs font-medium text-slate-600" for="a-sur">Фамилия</label>
-						<input id="a-sur" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={surname} />
+						<label class="text-xs font-medium text-slate-400" for="a-sur">Фамилия</label>
+						<input id="a-sur" class="ds-input mt-1 text-sm" bind:value={surname} />
 					</div>
 					<div>
-						<label class="text-xs font-medium text-slate-600" for="a-name">Имя</label>
-						<input id="a-name" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={name} />
+						<label class="text-xs font-medium text-slate-400" for="a-name">Имя</label>
+						<input id="a-name" class="ds-input mt-1 text-sm" bind:value={name} />
 					</div>
 					<div>
-						<label class="text-xs font-medium text-slate-600" for="a-patr">Отчество</label>
-						<input id="a-patr" class="mt-1 w-full rounded-md border-slate-300 text-sm" bind:value={patr} />
+						<label class="text-xs font-medium text-slate-400" for="a-patr">Отчество</label>
+						<input id="a-patr" class="ds-input mt-1 text-sm" bind:value={patr} />
 					</div>
 				</div>
-				<label class="flex items-center gap-2 text-sm text-slate-700">
-					<input type="checkbox" bind:checked={is_admin} class="rounded border-slate-300" />
-					Администратор
+				<label class="flex items-center gap-2 text-sm text-slate-300">
+					<input
+						type="checkbox"
+						bind:checked={is_admin}
+						class="rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500"
+					/>
+					Назначить администратором
 				</label>
-				<button
-					type="submit"
-					class="w-fit rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-					disabled={pending}>{pending ? 'Создание…' : 'Создать пользователя'}</button
+				<button type="submit" class="ds-btn-primary w-fit text-sm" disabled={pending}
+					>{pending ? 'Создание…' : 'Создать пользователя'}</button
 				>
 			</form>
 		</section>
 
-		<section class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-			<div class="border-b border-slate-200 px-4 py-3">
-				<h2 class="font-semibold text-slate-900">Пользователи</h2>
+		<section class="ds-card overflow-x-auto">
+			<div class="border-b border-slate-700 px-4 py-3">
+				<h2 class="font-semibold text-slate-100">Пользователи</h2>
 			</div>
 			<table class="min-w-full text-left text-sm">
-				<thead class="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase text-slate-600">
+				<thead class="ds-table-head">
 					<tr>
-						<th class="px-4 py-2">id</th>
+						<th class="px-4 py-2">ID</th>
 						<th class="px-4 py-2">логин</th>
 						<th class="px-4 py-2">имя</th>
-						<th class="px-4 py-2">админ</th>
+						<th class="px-4 py-2">администратор</th>
 						<th class="px-4 py-2">создан</th>
 					</tr>
 				</thead>
 				<tbody>
 					{#each users as u}
-						<tr class="border-b border-slate-100">
-							<td class="px-4 py-2 font-mono text-xs">{u.id}</td>
-							<td class="px-4 py-2">{u.login}</td>
-							<td class="px-4 py-2 text-slate-600">{u.surname ?? ''} {u.name ?? ''}</td>
-							<td class="px-4 py-2">{u.is_admin ? 'да' : 'нет'}</td>
+						<tr class="ds-table-row">
+							<td class="px-4 py-2 font-mono text-xs text-slate-400">{u.id}</td>
+							<td class="px-4 py-2 text-slate-200">{u.login}</td>
+							<td class="px-4 py-2 text-slate-400">{u.surname ?? ''} {u.name ?? ''}</td>
+							<td class="px-4 py-2 text-slate-300">{u.is_admin ? 'да' : 'нет'}</td>
 							<td class="px-4 py-2 text-xs text-slate-500">{u.created_at}</td>
 						</tr>
 					{:else}
@@ -171,5 +179,5 @@
 		</section>
 	</div>
 {:else if !auth.authLoading}
-	<p class="text-slate-600">Нет доступа.</p>
+	<p class="text-slate-400">Нет доступа.</p>
 {/if}

@@ -24,9 +24,12 @@
 </script>
 
 {#if !checked || auth.authLoading}
-	<p class="text-center text-slate-600">Проверка доступа…</p>
+	<div class="flex flex-col items-center gap-3 py-16">
+		<div class="h-3 w-40 animate-pulse rounded-full bg-slate-700"></div>
+		<p class="text-center text-sm text-slate-400">Проверка доступа…</p>
+	</div>
 {:else if auth.currentUser}
 	{@render children()}
 {:else}
-	<p class="text-center text-slate-600">Перенаправление на вход…</p>
+	<p class="text-center text-sm text-slate-400">Перенаправление на вход…</p>
 {/if}

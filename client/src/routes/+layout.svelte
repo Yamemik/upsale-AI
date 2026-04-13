@@ -1,87 +1,112 @@
 <script lang="ts">
 	import './layout.css';
-	import { page } from '$app/state';
-	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
-	import { auth, refreshCurrentUser, logout } from '$lib/auth.svelte';
+	import { page } from '$app/stores';
+	import { auth, logout, refreshCurrentUser } from '$lib/auth.svelte';
+	import { getApiDocsUrl } from '$lib/constants';
 
 	let { children } = $props();
 
-	const navAuthed = [
-		{ href: '/sales', label: 'Продажи' },
-		{ href: '/forecast', label: 'Прогноз' },
-		{ href: '/integration', label: '1С' },
-		{ href: '/api/docs', label: 'API' }
-	];
+	const docsUrl = getApiDocsUrl();
 
 	onMount(() => {
 		void refreshCurrentUser();
 	});
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-	<title>Upsale AI</title>
-</svelte:head>
-
-<div class="min-h-screen bg-slate-50 text-slate-900">
-	<header class="border-b border-slate-200 bg-white">
-		<div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-			<a href="/" class="text-lg font-semibold tracking-tight text-slate-900">Upsale AI</a>
-			<nav class="flex flex-wrap items-center gap-1">
+<div class="ds-surface flex min-h-screen flex-col">
+	<header class="ds-header">
+		<div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+			<div class="flex min-w-0 flex-1 items-center gap-4">
+				<a href="/" class="shrink-0 text-lg font-semibold tracking-tight text-white">Upsale AI</a>
 				{#if auth.currentUser}
-					{#each navAuthed as item}
+					<nav class="hidden flex-wrap items-center gap-1 text-sm sm:flex">
 						<a
-							href={item.href}
-							class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {page.url.pathname ===
-								item.href ||
-							(item.href !== '/' && page.url.pathname.startsWith(item.href))
-								? 'bg-slate-900 text-white'
-								: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
+							href="/dashboard"
+							class="rounded-lg px-3 py-1.5 font-medium transition-colors {$page.url.pathname.startsWith('/dashboard')
+								? 'ds-btn-nav-active'
+								: 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
 						>
-							{item.label}
+							Сводка
 						</a>
-					{/each}
-					{#if auth.currentUser.is_admin}
 						<a
-							href="/admin"
-							class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {page.url.pathname ===
-								'/admin' || page.url.pathname.startsWith('/admin/')
-								? 'bg-slate-900 text-white'
-								: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
+							href="/sales"
+							class="rounded-lg px-3 py-1.5 font-medium transition-colors {$page.url.pathname.startsWith('/sales')
+								? 'ds-btn-nav-active'
+								: 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
 						>
-							Админка
+							Продажи
 						</a>
-					{/if}
+						<a
+							href="/forecast"
+							class="rounded-lg px-3 py-1.5 font-medium transition-colors {$page.url.pathname.startsWith('/forecast')
+								? 'ds-btn-nav-active'
+								: 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
+						>
+							Прогноз
+						</a>
+						<a
+							href="/integration"
+							class="rounded-lg px-3 py-1.5 font-medium transition-colors {$page.url.pathname.startsWith('/integration')
+								? 'ds-btn-nav-active'
+								: 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
+						>
+							1С
+						</a>
+						<a
+							href="/administration"
+							class="rounded-lg px-3 py-1.5 font-medium transition-colors {$page.url.pathname.startsWith('/administration')
+								? 'ds-btn-nav-active'
+								: 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
+						>
+							Администрирование
+						</a>
+						<a
+							href="/account"
+							class="rounded-lg px-3 py-1.5 font-medium transition-colors {$page.url.pathname.startsWith('/account')
+								? 'ds-btn-nav-active'
+								: 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
+						>
+							Профиль
+						</a>
+					</nav>
 				{/if}
-			</nav>
-			<div class="flex items-center gap-3 text-sm">
-				{#if auth.authLoading}
-					<span class="text-slate-500">…</span>
-				{:else if auth.currentUser}
-					<span class="hidden text-slate-600 sm:inline">{auth.currentUser.login}</span>
+			</div>
+			<div class="flex shrink-0 items-center gap-2">
+				{#if docsUrl}
 					<a
-						href="/account"
-						class="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-						>Профиль</a
+						href={docsUrl}
+						target="_blank"
+						rel="noreferrer"
+						class="hidden rounded-lg px-2 py-1 text-xs text-slate-400 hover:text-slate-200 sm:inline"
 					>
-					<button
-						type="button"
-						class="rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white hover:bg-slate-800"
-						onclick={() => logout()}>Выйти</button
-					>
-				{:else}
-					<a
-						href="/login"
-						class="rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white hover:bg-slate-800"
-						>Вход</a
-					>
+						Документация API
+					</a>
+				{/if}
+				{#if auth.currentUser}
+					<button type="button" class="ds-btn-ghost text-xs sm:text-sm" onclick={() => logout()}>
+						Выйти
+					</button>
+				{:else if !$page.url.pathname.startsWith('/login')}
+					<a href="/login" class="ds-btn-primary text-sm">Войти</a>
 				{/if}
 			</div>
 		</div>
+		{#if auth.currentUser}
+			<div class="border-t border-slate-700/60 px-4 py-2 sm:hidden">
+				<nav class="flex flex-wrap gap-1 text-xs">
+					<a href="/dashboard" class="rounded-md px-2 py-1 {$page.url.pathname.startsWith('/dashboard') ? 'bg-blue-600 text-white' : 'text-slate-300'}">Сводка</a>
+					<a href="/sales" class="rounded-md px-2 py-1 {$page.url.pathname.startsWith('/sales') ? 'bg-blue-600 text-white' : 'text-slate-300'}">Продажи</a>
+					<a href="/forecast" class="rounded-md px-2 py-1 {$page.url.pathname.startsWith('/forecast') ? 'bg-blue-600 text-white' : 'text-slate-300'}">Прогноз</a>
+					<a href="/integration" class="rounded-md px-2 py-1 {$page.url.pathname.startsWith('/integration') ? 'bg-blue-600 text-white' : 'text-slate-300'}">1С</a>
+					<a href="/administration" class="rounded-md px-2 py-1 {$page.url.pathname.startsWith('/administration') ? 'bg-blue-600 text-white' : 'text-slate-300'}">Админ</a>
+					<a href="/account" class="rounded-md px-2 py-1 {$page.url.pathname.startsWith('/account') ? 'bg-blue-600 text-white' : 'text-slate-300'}">Профиль</a>
+				</nav>
+			</div>
+		{/if}
 	</header>
 
-	<main class="mx-auto max-w-6xl px-4 py-8">
+	<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
 		{@render children()}
 	</main>
 </div>

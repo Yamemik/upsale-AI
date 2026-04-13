@@ -1,10 +1,13 @@
-from sqlalchemy import Column, Integer, Float, Date, ForeignKey, JSON
+from sqlalchemy import Column, Integer, Float, Date, ForeignKey, JSON, Computed, Index
 from sqlalchemy.orm import relationship
 from src.db.base import Base
 
 
 class Sale(Base):
     __tablename__ = "sales"
+    __table_args__ = (
+        Index("ix_sales_sale_date", "sale_date"),
+    )
 
     id = Column(Integer, primary_key=True)
 
@@ -16,7 +19,7 @@ class Sale(Base):
     quantity = Column(Float)
     price = Column(Float)
 
-    revenue = Column(Float)
+    revenue = Column(Float, Computed("quantity * price", persisted=True))
 
     # Признаки из датасета ВКР (lag, rolling, stock_level и т.д.) до выделения колонок в схеме
     import_extras = Column(JSON, nullable=True)

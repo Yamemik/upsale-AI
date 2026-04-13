@@ -308,10 +308,8 @@ class ForecastingService:
             forecast_date = date.today()
             to_save = [
                 Forecast(
-                    shop_id=wid_store,
-                    item_id=pid,
-                    month=pt.date,
-                    predicted_cnt=pt.predicted_sales,
+                    shop_id=None,
+                    item_id=None,
                     product_id=pid,
                     warehouse_id=wid_store,
                     forecast_date=forecast_date,
