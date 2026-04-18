@@ -69,13 +69,14 @@
 
 	<section class="ds-card border-dashed border-slate-600/80 px-5 py-4 sm:px-6">
 		<p class="text-sm text-slate-400">
-			После входа: <a class="font-medium text-blue-400 hover:text-blue-300" href="/dashboard">Сводка</a>,
+			После входа доступны рабочие разделы:
+			<a class="font-medium text-blue-400 hover:text-blue-300" href="/dashboard">Сводка</a>,
 			<a class="font-medium text-blue-400 hover:text-blue-300" href="/sales">Продажи</a>,
 			<a class="font-medium text-blue-400 hover:text-blue-300" href="/forecast">Прогноз</a>,
 			<a class="font-medium text-blue-400 hover:text-blue-300" href="/integration">1С</a>,
 			<a class="font-medium text-blue-400 hover:text-blue-300" href="/administration">Администрирование</a>,
 			<a class="font-medium text-blue-400 hover:text-blue-300" href="/account">Профиль</a>.
-			Регистрация недоступна — учётные записи создаёт администратор.
+			Доступ к системе настраивается администратором.
 		</p>
 	</section>
 </div>

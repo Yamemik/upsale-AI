@@ -38,6 +38,36 @@ export type PipelineStep = {
 	title: string;
 };
 
+export type KaggleImportStep = {
+	id: string;
+	order: number;
+	title: string;
+};
+
+export type KaggleImportStepResult = {
+	step: string;
+	title: string;
+	rows_read: number;
+	inserted: number;
+	updated: number;
+	skipped: number;
+	errors: string[];
+};
+
+export type KaggleImportRunResult = {
+	mode: 'upsert' | 'reload';
+	dry_run: boolean;
+	steps_requested: string[];
+	steps_executed: KaggleImportStepResult[];
+	totals: {
+		rows_read: number;
+		inserted: number;
+		updated: number;
+		skipped: number;
+		errors: number;
+	};
+};
+
 export type ForecastPoint = {
 	date: string;
 	predicted_sales: number;

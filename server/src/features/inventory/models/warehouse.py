@@ -5,6 +5,11 @@ from src.db.base import Base
 
 
 class Warehouse(Base):
+    """Склад или точка хранения: внешний идентификатор (интеграция), название, локация, опциональная связь с магазином Kaggle.
+
+    Участвует в продажах, остатках и прогнозах по складам.
+    """
+
     __tablename__ = "warehouses"
 
     id = Column(Integer, primary_key=True, index=True)

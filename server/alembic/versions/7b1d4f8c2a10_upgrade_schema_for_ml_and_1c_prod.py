@@ -41,6 +41,12 @@ def _has_fk(table_name: str, fk_name: str) -> bool:
     return any(fk["name"] == fk_name for fk in insp.get_foreign_keys(table_name))
 
 
+def _has_table(table_name: str) -> bool:
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    return table_name in insp.get_table_names()
+
+
 def upgrade() -> None:
     # products -> items bridge
     with op.batch_alter_table("products") as batch_op:
@@ -121,16 +127,17 @@ def upgrade() -> None:
             )
 
     # inventory history
-    op.create_table(
-        "inventory_history",
-        sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("product_id", sa.Integer(), sa.ForeignKey("products.id"), nullable=False),
-        sa.Column("warehouse_id", sa.Integer(), sa.ForeignKey("warehouses.id"), nullable=False),
-        sa.Column("stock_quantity", sa.Float(), nullable=False),
-        sa.Column("valid_from", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-        sa.Column("valid_to", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-    )
+    if not _has_table("inventory_history"):
+        op.create_table(
+            "inventory_history",
+            sa.Column("id", sa.Integer(), primary_key=True),
+            sa.Column("product_id", sa.Integer(), sa.ForeignKey("products.id"), nullable=False),
+            sa.Column("warehouse_id", sa.Integer(), sa.ForeignKey("warehouses.id"), nullable=False),
+            sa.Column("stock_quantity", sa.Float(), nullable=False),
+            sa.Column("valid_from", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+            sa.Column("valid_to", sa.DateTime(timezone=True), nullable=True),
+            sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        )
 
     # sales revenue as generated value
     with op.batch_alter_table("sales") as batch_op:
@@ -165,14 +172,15 @@ def upgrade() -> None:
             )
 
     # ETL table
-    op.create_table(
-        "data_loads",
-        sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("source", sa.String(length=100), nullable=False),
-        sa.Column("status", sa.String(length=32), nullable=False),
-        sa.Column("rows_loaded", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-    )
+    if not _has_table("data_loads"):
+        op.create_table(
+            "data_loads",
+            sa.Column("id", sa.Integer(), primary_key=True),
+            sa.Column("source", sa.String(length=100), nullable=False),
+            sa.Column("status", sa.String(length=32), nullable=False),
+            sa.Column("rows_loaded", sa.Integer(), nullable=False, server_default="0"),
+            sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        )
 
     # Required indexes
     if not _has_index("sales", "ix_sales_sale_date"):

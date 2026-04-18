@@ -6,6 +6,8 @@ from src.db.base import Base
 
 
 class ReorderRecommendation(Base):
+    """Рекомендация по пополнению запаса: объём заказа, точка перезаказа и lead time для пары товар–склад."""
+
     __tablename__ = "reorder_recommendations"
 
     id = Column(Integer, primary_key=True)

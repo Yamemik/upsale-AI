@@ -9,6 +9,14 @@ https://www.kaggle.com/c/competitive-data-science-predict-future-sales/data
 - items.csv: item_name, item_id, item_category_id
 - item_categories.csv: item_category_name, item_category_id
 
+Рекомендуемый порядок загрузки CSV в систему:
+1) categories        <- item_categories.csv
+2) items (ML слой)  <- items.csv
+3) products (бизнес слой) <- items.csv
+4) warehouses       <- shops.csv
+5) sales (история)  <- sales_train.csv
+6) inventory (остатки) <- inventory.csv (если есть) или расчетный снимок
+
 Сервер (этот проект): GET /api/v1/integration/1c/export/kaggle-dataset
 с заголовком X-API-KEY — возвращает ZIP с четырьмя CSV из OData.
 

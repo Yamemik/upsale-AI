@@ -6,6 +6,11 @@ from src.db.base import Base
 
 
 class ForecastExplanation(Base):
+    """Вклад признака в прогноз (например, SHAP): имя признака, значение и вес объяснения для одного Forecast.
+
+    Нужен для интерпретации модели и отладки качества прогнозов.
+    """
+
     __tablename__ = "forecast_explanations"
 
     id = Column(Integer, primary_key=True)

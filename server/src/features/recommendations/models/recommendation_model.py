@@ -7,6 +7,8 @@ from src.db.base import Base
 
 
 class Recommendation(Base):
+    """Простая upsale/cross-sell рекомендация по товару: предлагаемое количество без привязки к складу."""
+
     __tablename__ = "recommendations"
 
     id: Mapped[int] = mapped_column(primary_key=True)

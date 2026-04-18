@@ -5,6 +5,8 @@ from src.db.base import Base
 
 
 class ApiKey(Base):
+    """API-ключ для внешних систем (например 1С): хранится хеш ключа, имя, права, активность и привязка к пользователю."""
+
     __tablename__ = "api_keys"
 
     id = Column(Integer, primary_key=True, index=True)

@@ -4,6 +4,11 @@ from src.db.base import Base
 
 
 class Sale(Base):
+    """Факт продажи: товар, склад, дата, количество и цена; выручка хранится как вычисляемое поле.
+
+    Поле import_extras — временное хранилище признаков при импорте из датасетов до нормализации схемы.
+    """
+
     __tablename__ = "sales"
     __table_args__ = (
         Index("ix_sales_sale_date", "sale_date"),

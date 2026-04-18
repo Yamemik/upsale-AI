@@ -6,6 +6,11 @@ from src.db.base import Base
 
 
 class Product(Base):
+    """Товар в операционной модели: связь с 1С (external_id), категория, бренд, опциональная связь с Item из ML-слоя.
+
+    Центральная сущность для продаж, остатков, прогнозов и рекомендаций.
+    """
+
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, index=True)

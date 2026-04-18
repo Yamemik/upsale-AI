@@ -1,68 +1,31 @@
 """
-Этапы конвейера (соответствие целевой схеме):
+Эталонный порядок загрузки CSV (Kaggle Predict Future Sales):
 
-[Kaggle Dataset]
-sales_train.csv, items.csv, shops.csv
-        │
-        ▼
-[Загрузка CSV в систему]          ← Pandas / PostgreSQL
-        │
-        ▼
-[Предобработка данных]            ← удаление выбросов и пропусков
-        │
-        ▼
-[Агрегация]                       ← дневные -> месячные продажи
-        │
-        ▼
-[Feature Engineering]          ← FeatureEngineeringService
-(lag_1, lag_3, lag_12, rolling_mean, seasonality)
-        │
-        ▼
-[Обучение модели]              ← LightGBM / CatBoost
-        │
-        ▼
-[Оценка качества]              ← RMSE (стандарт Kaggle)
-        │
-        ▼
-[Сохранение модели]            ← ModelManager (.pkl)
-        │
-        ▼
-[Прогнозирование]              ← test.csv -> item_cnt_month
-        │
-        ▼
-[Оптимизация запасов]          ← формула с lead time
-        │
-        ▼
-[Интеграция с 1С]               ← REST API
+1) item_categories.csv -> categories
+2) items.csv -> items (ML слой)
+3) items.csv -> products (бизнес слой)
+4) shops.csv -> warehouses
+5) sales_train.csv -> sales (история)
+6) inventory.csv (или расчетный снимок) -> inventory (остатки)
 """
 
 from enum import Enum
 
 
 class PipelineStage(str, Enum):
-    ONE_C_SOURCE = "1c_enterprise"
-    EXPORT_CSV_ODATA = "export_csv_odata"
-    LOAD_POSTGRES = "load_postgresql"
-    DATA_CLEANING = "data_cleaning"
-    FEATURE_ENGINEERING = "feature_engineering"
-    TRAIN_MODEL = "train_model"
-    EVALUATE = "evaluate_quality"
-    SAVE_MODEL = "save_model"
-    FORECAST = "forecast"
-    INVENTORY_OPTIMIZATION = "inventory_optimization"
-    PUSH_TO_ONE_C = "push_to_1c"
+    LOAD_CATEGORIES = "load_categories_csv"
+    LOAD_ITEMS_ML = "load_items_ml_csv"
+    LOAD_PRODUCTS_BUSINESS = "load_products_business_csv"
+    LOAD_WAREHOUSES = "load_warehouses_csv"
+    LOAD_SALES_HISTORY = "load_sales_history_csv"
+    LOAD_INVENTORY = "load_inventory_csv"
 
 
 PIPELINE_DESCRIPTION: list[tuple[PipelineStage, str]] = [
-    (PipelineStage.ONE_C_SOURCE, "Источник: Kaggle dataset / 1С"),
-    (PipelineStage.EXPORT_CSV_ODATA, "Загрузка CSV и справочников"),
-    (PipelineStage.LOAD_POSTGRES, "Сохранение в PostgreSQL"),
-    (PipelineStage.DATA_CLEANING, "Очистка данных (пропуски, price < 0, выбросы)"),
-    (PipelineStage.FEATURE_ENGINEERING, "Feature Engineering (lag_1/3/12, rolling_mean_3, seasonality)"),
-    (PipelineStage.TRAIN_MODEL, "Обучение модели (LightGBM / CatBoost)"),
-    (PipelineStage.EVALUATE, "Оценка качества (RMSE)"),
-    (PipelineStage.SAVE_MODEL, "Сохранение модели (.pkl)"),
-    (PipelineStage.FORECAST, "Прогнозирование"),
-    (PipelineStage.INVENTORY_OPTIMIZATION, "Оптимизация запасов (lead time, safety stock)"),
-    (PipelineStage.PUSH_TO_ONE_C, "Отправка в 1С (REST API / OData)"),
+    (PipelineStage.LOAD_CATEGORIES, "1. categories <- item_categories.csv"),
+    (PipelineStage.LOAD_ITEMS_ML, "2. items (ML слой) <- items.csv"),
+    (PipelineStage.LOAD_PRODUCTS_BUSINESS, "3. products (бизнес слой) <- items.csv"),
+    (PipelineStage.LOAD_WAREHOUSES, "4. warehouses <- shops.csv"),
+    (PipelineStage.LOAD_SALES_HISTORY, "5. sales (история) <- sales_train.csv"),
+    (PipelineStage.LOAD_INVENTORY, "6. inventory (остатки) <- inventory.csv/расчет"),
 ]

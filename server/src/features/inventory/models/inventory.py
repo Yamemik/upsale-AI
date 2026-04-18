@@ -5,6 +5,8 @@ from src.db.base import Base
 
 
 class Inventory(Base):
+    """Текущий остаток товара на складе (одна строка на пару product_id + warehouse_id)."""
+
     __tablename__ = "inventory"
     __table_args__ = (
         UniqueConstraint("product_id", "warehouse_id", name="uq_inventory_product_warehouse"),
@@ -25,6 +27,8 @@ class Inventory(Base):
 
 
 class InventoryHistory(Base):
+    """История изменений остатков: снимки количества с интервалом действия (valid_from / valid_to) для аналитики и аудита."""
+
     __tablename__ = "inventory_history"
 
     id = Column(Integer, primary_key=True)

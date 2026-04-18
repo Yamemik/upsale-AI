@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Alert from '$lib/components/Alert.svelte';
-	import { apiFetch, apiUrl, readStoredToken } from '$lib/api/client';
+	import { apiFetch } from '$lib/api/client';
 	import { formatApiError } from '$lib/api/errors';
-	import type { Sale, SaleCsvImportResult } from '$lib/api/types';
+	import type { Sale } from '$lib/api/types';
 
 	let sales = $state<Sale[]>([]);
 	let loadErr = $state<string | null>(null);
@@ -19,9 +19,6 @@
 	let quantity = $state(1);
 	let price = $state(0);
 	let revenue = $state(0);
-
-	let importFormat = $state<'auto' | 'kaggle' | 'legacy'>('auto');
-	let fileInput = $state<HTMLInputElement | undefined>(undefined);
 
 	async function load() {
 		loadErr = null;
@@ -65,45 +62,6 @@
 		}
 	}
 
-	async function importCsv() {
-		err = null;
-		ok = null;
-		const input = fileInput;
-		const file = input?.files?.[0];
-		if (!file) {
-			err = 'Выберите CSV файл';
-			return;
-		}
-		pending = true;
-		try {
-			const fd = new FormData();
-			fd.append('file', file);
-			const token = readStoredToken();
-			const headers = new Headers();
-			if (token) headers.set('Authorization', `Bearer ${token}`);
-			const q = new URLSearchParams({ import_format: importFormat });
-			const res = await fetch(apiUrl(`/api/v1/sales/import/csv?${q}`), {
-				method: 'POST',
-				body: fd,
-				headers
-			});
-			if (!res.ok) {
-				const body = await res.json().catch(() => ({}));
-				throw { detail: body.detail ?? res.statusText, status: res.status };
-			}
-			const data = (await res.json()) as SaleCsvImportResult;
-			ok = `Импорт: ${data.imported} добавлено, ${data.skipped} пропущено${
-				data.format_detected ? `, формат: ${data.format_detected}` : ''
-			}`;
-			if (data.errors?.length) ok += `. Ошибки: ${data.errors.slice(0, 5).join('; ')}`;
-			await load();
-			if (input) input.value = '';
-		} catch (e) {
-			err = formatApiError(e);
-		} finally {
-			pending = false;
-		}
-	}
 </script>
 
 <div class="space-y-8">
@@ -129,7 +87,7 @@
 		<Alert variant="success">{ok}</Alert>
 	{/if}
 
-	<div class="grid gap-8 lg:grid-cols-2">
+	<div class="grid gap-8">
 		<section class="ds-card p-6">
 			<h2 class="font-semibold text-slate-100">Новая продажа</h2>
 			<form class="mt-4 grid gap-3 sm:grid-cols-2" onsubmit={createSale}>
@@ -169,23 +127,6 @@
 					<button type="submit" class="ds-btn-primary text-sm" disabled={pending}>Сохранить</button>
 				</div>
 			</form>
-		</section>
-
-		<section class="ds-card p-6">
-			<h2 class="font-semibold text-slate-100">Импорт CSV</h2>
-			<p class="mt-1 text-xs text-slate-400">POST <code class="text-slate-500">/api/v1/sales/import/csv</code></p>
-			<div class="mt-4 space-y-3">
-				<div>
-					<label class="text-xs font-medium text-slate-400" for="fmt">Формат</label>
-					<select id="fmt" class="ds-input mt-1 text-sm" bind:value={importFormat}>
-						<option value="auto">авто</option>
-						<option value="kaggle">Kaggle</option>
-						<option value="legacy">устаревший</option>
-					</select>
-				</div>
-				<input bind:this={fileInput} type="file" accept=".csv,text/csv" class="block w-full text-sm text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-sm file:text-slate-200" />
-				<button type="button" class="ds-btn-primary text-sm" disabled={pending} onclick={() => importCsv()}>Загрузить</button>
-			</div>
 		</section>
 	</div>
 

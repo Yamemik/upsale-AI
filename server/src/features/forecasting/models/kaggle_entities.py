@@ -1,9 +1,13 @@
+"""ORM-сущности ветки «магазин–товар–месяц» для обучения и оценки прогнозов на Kaggle-подобных данных."""
+
 from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, UniqueConstraint
 
 from src.db.base import Base
 
 
 class Shop(Base):
+    """Магазин (торговая точка) в нормализованной схеме датасета: идентификатор и отображаемое имя."""
+
     __tablename__ = "shops"
 
     shop_id = Column(Integer, primary_key=True)
@@ -11,6 +15,8 @@ class Shop(Base):
 
 
 class Category(Base):
+    """Категория товара в справочнике датасета для группировки и категориальных признаков в ML."""
+
     __tablename__ = "categories"
 
     category_id = Column(Integer, primary_key=True)
@@ -18,6 +24,8 @@ class Category(Base):
 
 
 class Item(Base):
+    """Товарная позиция в датасете (отдельно от Product 1С): имя и связь с категорией; может маппиться на products.item_id."""
+
     __tablename__ = "items"
 
     item_id = Column(Integer, primary_key=True)
@@ -26,6 +34,8 @@ class Item(Base):
 
 
 class MonthlySale(Base):
+    """Агрегированные продажи по магазину и товару за календарный месяц — таргет или исходные ряды для обучения."""
+
     __tablename__ = "monthly_sales"
     __table_args__ = (
         UniqueConstraint("shop_id", "item_id", "month", name="uq_monthly_sales_shop_item_month"),
@@ -39,6 +49,8 @@ class MonthlySale(Base):
 
 
 class FeatureRow(Base):
+    """Набор признаков на месяц для пары магазин–товар: лаги, скользящие средние, сезонность, цена и пр. для пайплайна ML."""
+
     __tablename__ = "features"
     __table_args__ = (
         UniqueConstraint("shop_id", "item_id", "month", name="uq_features_shop_item_month"),
@@ -63,6 +75,8 @@ class FeatureRow(Base):
 
 
 class TestData(Base):
+    """Строки тестового сета (магазин + товар) для инференса без известного таргета — например, сабмит соревнования."""
+
     __tablename__ = "test_data"
 
     id = Column(Integer, primary_key=True)

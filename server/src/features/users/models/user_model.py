@@ -5,6 +5,11 @@ from src.db.base import Base
 
 
 class User(Base):
+    """Учётная запись пользователя веб-приложения: логин, контакты, пароль, признак администратора.
+
+    Используется для аутентификации и привязки API-ключей к владельцу.
+    """
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)

@@ -6,6 +6,11 @@ from src.db.base import Base
 
 
 class ModelMetadata(Base):
+    """Версия обученной ML-модели: имя, версия, алгоритм, метрики качества, путь к артефактам, флаг активности.
+
+    Связывает прогнозы с конкретной обученной моделью для аудита и сравнения версий.
+    """
+
     __tablename__ = "model_versions"
 
     id = Column(Integer, primary_key=True)

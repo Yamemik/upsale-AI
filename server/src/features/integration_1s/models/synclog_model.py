@@ -7,6 +7,8 @@ from src.db.base import Base
 
 
 class SyncLog(Base):
+    """Журнал синхронизации с внешними системами: источник, сущность, статус и текстовое сообщение об ошибке или результате."""
+
     __tablename__ = "sync_logs"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -20,6 +22,8 @@ class SyncLog(Base):
 
 
 class DataLoad(Base):
+    """Учёт массовых загрузок данных: источник, статус и число загруженных строк для мониторинга импортов."""
+
     __tablename__ = "data_loads"
 
     id: Mapped[int] = mapped_column(primary_key=True)

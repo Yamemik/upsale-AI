@@ -5,6 +5,11 @@ from src.db.base import Base
 
 
 class Forecast(Base):
+    """Прогноз спроса на дату target_date для пары товар–склад (и опционально shop/item из Kaggle-схемы).
+
+    Содержит точечную оценку и доверительный интервал; уникален по товару, складу, целевой дате и версии модели.
+    """
+
     __tablename__ = "forecasts"
     __table_args__ = (
         UniqueConstraint(
