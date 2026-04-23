@@ -18,7 +18,10 @@
 	<header class="ds-header">
 		<div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
 			<div class="flex min-w-0 flex-1 items-center gap-4">
-				<a href="/" class="shrink-0 text-lg font-semibold tracking-tight text-white">Upsale AI</a>
+				<a href="/" class="flex shrink-0 items-center gap-2 text-white" aria-label="Upsale AI">
+					<img src="/logo.png" alt="Upsale AI" class="h-12 w-12 rounded-lg object-cover" />
+					<span class="text-sm font-semibold tracking-wide">Upsale AI</span>
+				</a>
 				{#if auth.currentUser}
 					<nav class="hidden flex-wrap items-center gap-1 text-sm sm:flex">
 						<a
