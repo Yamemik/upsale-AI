@@ -11,6 +11,7 @@ class Shop(Base):
     __tablename__ = "shops"
 
     shop_id = Column(Integer, primary_key=True)
+    external_id = Column(String(64), nullable=True, unique=True, index=True)
     shop_name = Column(String, nullable=False)
 
 
@@ -20,6 +21,7 @@ class Category(Base):
     __tablename__ = "categories"
 
     category_id = Column(Integer, primary_key=True)
+    external_id = Column(String(64), nullable=True, unique=True, index=True)
     category_name = Column(String, nullable=False)
 
 
@@ -29,8 +31,9 @@ class Item(Base):
     __tablename__ = "items"
 
     item_id = Column(Integer, primary_key=True)
+    external_id = Column(String(64), nullable=True, unique=True, index=True)
     item_name = Column(String, nullable=False)
-    category_id = Column(Integer, ForeignKey("categories.category_id"), nullable=False, index=True)
+    category_id = Column(Integer, ForeignKey("categories.category_id"), nullable=True, index=True)
 
 
 class MonthlySale(Base):

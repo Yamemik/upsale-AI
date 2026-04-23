@@ -12,6 +12,7 @@ class Sale(Base):
     __tablename__ = "sales"
     __table_args__ = (
         Index("ix_sales_sale_date", "sale_date"),
+        Index("ux_sales_date_warehouse_product", "sale_date", "warehouse_id", "product_id", unique=True),
     )
 
     id = Column(Integer, primary_key=True)

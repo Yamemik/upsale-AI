@@ -1,6 +1,7 @@
 from datetime import date
 
 from pydantic import BaseModel, Field
+from typing import Literal
 
 
 class ForecastRequest(BaseModel):
@@ -47,15 +48,28 @@ class ForecastResponse(BaseModel):
 
 
 class TrainFromDbRequest(BaseModel):
-    product_id: int
+    product_id: int | None = None
     warehouse_id: int | None = None
+    source: Literal["db", "csv"] = "db"
+    csv_path: str | None = None
+    model_backend: str | None = Field(
+        default=None,
+        description="lightgbm | catboost, если не задано — берется из settings",
+    )
 
 
 class TrainFromDbResponse(BaseModel):
-    product_id: int
+    product_id: int | None = None
     warehouse_id: int | None = None
     rows_used: int
     mape: float | None = None
     rmse: float | None = None
+    mae: float | None = None
     backend: str
     model_path: str
+    model_version: int
+    trained_at: date
+
+
+class RetrainRequest(TrainFromDbRequest):
+    pass

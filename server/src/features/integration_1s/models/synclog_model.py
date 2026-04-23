@@ -31,3 +31,13 @@ class DataLoad(Base):
     status: Mapped[str] = mapped_column(String(32))
     rows_loaded: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+
+
+class SyncState(Base):
+    """Текущее состояние инкрементальной синхронизации по сущности."""
+
+    __tablename__ = "sync_state"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    entity: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    last_sync_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

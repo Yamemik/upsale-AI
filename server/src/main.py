@@ -10,6 +10,7 @@ from src.config.settings import settings
 from src.api.v1.router import api_router
 from src.db.init_db import init_db
 from src.db.session import AsyncSessionLocal, engine
+from src.features.integration_1s.api.sync_public_routes import Integration1SPublicRoutes
 
 logger = logging.getLogger(__name__)
 
@@ -100,3 +101,4 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 app.include_router(api_router)
+app.include_router(Integration1SPublicRoutes().router, prefix="/api")

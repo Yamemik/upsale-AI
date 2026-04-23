@@ -7,6 +7,7 @@ from ..dependencies import get_forecast_service
 from ..schemas.forecast_schema import (
     ForecastRequest,
     ForecastResponse,
+    RetrainRequest,
     TrainFromDbRequest,
     TrainFromDbResponse,
 )
@@ -55,6 +56,9 @@ class ForecastRoutes:
                     db,
                     body.product_id,
                     body.warehouse_id,
+                    source=body.source,
+                    csv_path=body.csv_path,
+                    backend=body.model_backend,
                 )
             except ValueError as e:
                 raise HTTPException(
@@ -63,7 +67,7 @@ class ForecastRoutes:
                 ) from e
 
         @self.router.post(
-            "/",
+            "/predict",
             response_model=ForecastResponse,
             status_code=status.HTTP_200_OK,
         )
@@ -82,6 +86,44 @@ class ForecastRoutes:
             except FileNotFoundError as e:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=str(e),
+                ) from e
+
+        @self.router.post(
+            "/",
+            response_model=ForecastResponse,
+            status_code=status.HTTP_200_OK,
+            include_in_schema=False,
+        )
+        async def make_forecast_legacy(
+            data: ForecastRequest,
+            db: AsyncSession = Depends(get_db),
+            service: ForecastingService = Depends(get_forecast_service),
+        ):
+            return await make_forecast(data=data, db=db, service=service)
+
+        @self.router.post(
+            "/retrain",
+            response_model=TrainFromDbResponse,
+            status_code=status.HTTP_200_OK,
+        )
+        async def retrain_forecast_model(
+            body: RetrainRequest,
+            db: AsyncSession = Depends(get_db),
+            service: ForecastingService = Depends(get_forecast_service),
+        ):
+            try:
+                return await service.retrain(
+                    db,
+                    product_id=body.product_id,
+                    warehouse_id=body.warehouse_id,
+                    source=body.source,
+                    csv_path=body.csv_path,
+                    backend=body.model_backend,
+                )
+            except ValueError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
                     detail=str(e),
                 ) from e
 
