@@ -15,10 +15,10 @@ export type UserMe = {
 
 export type Sale = {
 	id: number;
-	product_id: string;
-	product_name: string;
-	category: string;
-	warehouse_id: string;
+	product_id: number;
+	product_name: string | null;
+	category: string | null;
+	warehouse_id: number;
 	sale_date: string;
 	quantity: number;
 	price: number;
@@ -95,8 +95,11 @@ export type TrainResult = {
 	rows_used: number;
 	mape: number | null;
 	rmse: number | null;
+	mae: number | null;
 	backend: string;
 	model_path: string;
+	model_version: number;
+	trained_at: string;
 };
 
 export type ApiError = {

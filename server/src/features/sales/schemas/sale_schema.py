@@ -3,14 +3,12 @@ from pydantic import BaseModel
 
 
 class SaleBase(BaseModel):
-    product_id: str
-    product_name: str
-    category: str
-    warehouse_id: str
+    product_id: int
+    warehouse_id: int
     sale_date: date
     quantity: float
     price: float
-    revenue: float
+    revenue: float | None = None
 
 
 class SaleCreate(SaleBase):
@@ -19,6 +17,8 @@ class SaleCreate(SaleBase):
 
 class SaleResponse(SaleBase):
     id: int
+    product_name: str | None = None
+    category: str | None = None
 
     class Config:
         from_attributes = True

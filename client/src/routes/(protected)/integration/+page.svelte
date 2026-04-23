@@ -142,6 +142,15 @@
 		if (file) fd.append(field, file);
 	}
 
+function buildAuthHeaders(): Headers {
+	const headers = new Headers();
+	const token = readStoredToken();
+	if (token) headers.set('Authorization', `Bearer ${token}`);
+	const key = apiKey.trim();
+	if (key) headers.set('X-API-KEY', key);
+	return headers;
+}
+
 	async function runKagglePipeline() {
 		err = null;
 		ok = null;
@@ -170,9 +179,7 @@
 			appendFile(fd, 'sales_file', salesFileInput);
 			appendFile(fd, 'inventory_file', inventoryFileInput);
 
-			const headers = new Headers();
-			const token = readStoredToken();
-			if (token) headers.set('Authorization', `Bearer ${token}`);
+			const headers = buildAuthHeaders();
 
 			const res = await fetch(apiUrl(`/api/v1/sales/import/kaggle/pipeline?${q.toString()}`), {
 				method: 'POST',
@@ -216,9 +223,7 @@
 			appendFile(fd, 'sales_file', salesFileInput);
 			appendFile(fd, 'inventory_file', inventoryFileInput);
 
-			const headers = new Headers();
-			const token = readStoredToken();
-			if (token) headers.set('Authorization', `Bearer ${token}`);
+			const headers = buildAuthHeaders();
 
 			const res = await fetch(apiUrl(`/api/v1/sales/import/kaggle/step/${stepId}?${q.toString()}`), {
 				method: 'POST',

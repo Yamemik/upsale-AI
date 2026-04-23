@@ -2,6 +2,7 @@ from datetime import date
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from ..models.sale_model import Sale
 
@@ -17,8 +18,24 @@ class SalesRepository:
         return sale
 
     async def get_all(self) -> list[Sale]:
-        result = await self.db.execute(select(Sale))
+        result = await self.db.execute(
+            select(Sale).options(
+                selectinload(Sale.product),
+                selectinload(Sale.warehouse),
+            )
+        )
         return result.scalars().all()
+
+    async def get_by_id(self, sale_id: int) -> Sale | None:
+        result = await self.db.execute(
+            select(Sale)
+            .where(Sale.id == sale_id)
+            .options(
+                selectinload(Sale.product),
+                selectinload(Sale.warehouse),
+            )
+        )
+        return result.scalar_one_or_none()
 
     async def get_by_product(self, product_id: int) -> list[Sale]:
         result = await self.db.execute(

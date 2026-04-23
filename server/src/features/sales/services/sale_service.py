@@ -8,8 +8,11 @@ class SaleService:
         self.repo = repo
 
     async def create_sale(self, data: SaleCreate) -> Sale:
-        sale = Sale(**data.model_dump())
-        return await self.repo.create(sale)
+        payload = data.model_dump(exclude={"revenue"})
+        sale = Sale(**payload)
+        created = await self.repo.create(sale)
+        hydrated = await self.repo.get_by_id(created.id)
+        return hydrated or created
 
     async def get_sales(self) -> list[Sale]:
         return await self.repo.get_all()

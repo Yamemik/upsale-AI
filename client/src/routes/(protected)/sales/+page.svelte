@@ -147,7 +147,7 @@
 					<tr class="ds-table-row">
 						<td class="px-3 py-2 font-mono text-xs text-slate-400">{s.id}</td>
 						<td class="px-3 py-2 whitespace-nowrap text-slate-300">{s.sale_date}</td>
-						<td class="px-3 py-2 text-slate-200">{s.product_name}</td>
+						<td class="px-3 py-2 text-slate-200">{s.product_name ?? `Товар ${s.product_id}`}</td>
 						<td class="px-3 py-2 font-mono text-xs text-slate-400">{s.warehouse_id}</td>
 						<td class="px-3 py-2 text-right text-slate-300">{s.quantity}</td>
 						<td class="px-3 py-2 text-right text-slate-300">{s.revenue}</td>

@@ -88,9 +88,9 @@
 			if (wh !== '') body.warehouse_id = wh;
 			const cs = currentStock.trim();
 			if (cs !== '') body.current_stock = Number(cs);
-			const res = await apiFetch<ForecastResult>('/forecast', { method: 'POST', json: body });
+			const res = await apiFetch<ForecastResult>('/forecast/predict', { method: 'POST', json: body });
 			lastPrediction = res;
-			ok = `Прогноз: ${res.horizon} мес., модель: ${res.model_backend ?? '—'}, рекомендованный заказ: ${res.suggested_order_quantity ?? '—'}`;
+			ok = `Прогноз: ${res.horizon} дн., модель: ${res.model_backend ?? '—'}, рекомендованный заказ: ${res.suggested_order_quantity ?? '—'}`;
 			await loadHistory();
 		} catch (e) {
 			err = formatApiError(e);
@@ -104,7 +104,7 @@
 	<div>
 		<h1 class="text-2xl font-bold text-slate-100">Прогноз</h1>
 		<p class="text-sm text-slate-400">
-			Графики по месячным шагам модели; интерпретация — SHAP для первого шага прогноза.
+			Графики по дневным шагам модели; интерпретация — SHAP для первого шага прогноза.
 		</p>
 	</div>
 
@@ -161,7 +161,7 @@
 		<section class="ds-card p-6">
 			<h2 class="font-semibold text-slate-100">Прогноз</h2>
 			<p class="mt-1 text-xs text-slate-400">
-				<code>horizon_days</code> переводится в целое число месяцев; на графике — помесячный ряд.
+				<code>horizon_days</code> задаёт горизонт в днях; на графике — дневной ряд.
 			</p>
 			<form
 				class="mt-4 space-y-3"
@@ -211,13 +211,13 @@
 		<section class="ds-card space-y-4 p-6">
 			<h2 class="font-semibold text-slate-100">График последнего прогноза</h2>
 			<p class="text-xs text-slate-400">
-				Товар <span class="font-mono">{lastPrediction.product_id}</span> · шаги по месяцам: {lastPrediction.forecast.length}
+				Товар <span class="font-mono">{lastPrediction.product_id}</span> · шаги по дням: {lastPrediction.forecast.length}
 			</p>
 			{#key lastPrediction.product_id + String(lastPrediction.forecast.at(-1)?.date)}
 				<ForecastLineChart
 					labels={lineLabels}
 					values={lineValues}
-					title="Прогноз продаж (по месяцам)"
+					title="Прогноз продаж (по дням)"
 					height={300}
 				/>
 			{/key}
@@ -231,7 +231,7 @@
 			{#if lastPrediction.shap_base_value != null && Number.isFinite(lastPrediction.shap_base_value)}
 				<p class="text-xs text-slate-500">
 					База модели: <span class="font-mono">{lastPrediction.shap_base_value.toFixed(4)}</span> · сумма SHAP + база ≈ прогноз на
-					первый месяц (с учётом численных погрешностей).
+					первый день (с учётом численных погрешностей).
 				</p>
 			{/if}
 			{#key (lastPrediction.shap_explanation ?? []).map((f) => f.feature_name + f.shap_value).join('|')}

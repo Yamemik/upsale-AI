@@ -18,13 +18,13 @@
 
 	const products = $derived.by(() => {
 		const set = new Map<string, string>();
-		for (const s of sales) set.set(s.product_id, s.product_name);
+		for (const s of sales) set.set(String(s.product_id), s.product_name ?? `Товар ${s.product_id}`);
 		return [...set.entries()].sort((a, b) => a[1].localeCompare(b[1]));
 	});
 
 	const warehouses = $derived.by(() => {
 		const set = new Set<string>();
-		for (const s of sales) set.add(s.warehouse_id);
+		for (const s of sales) set.add(String(s.warehouse_id));
 		return [...set].sort();
 	});
 
@@ -32,8 +32,8 @@
 		sales.filter((s) => {
 			if (dateFrom && s.sale_date < dateFrom) return false;
 			if (dateTo && s.sale_date > dateTo) return false;
-			if (productFilter && s.product_id !== productFilter) return false;
-			if (warehouseFilter && s.warehouse_id !== warehouseFilter) return false;
+			if (productFilter && String(s.product_id) !== productFilter) return false;
+			if (warehouseFilter && String(s.warehouse_id) !== warehouseFilter) return false;
 			return true;
 		})
 	);
@@ -82,9 +82,10 @@
 		const rows: { product: string; stock: number; demand: number; text: string }[] = [];
 		const byProduct = new Map<string, { name: string; qty: number }>();
 		for (const s of filteredSales) {
-			const cur = byProduct.get(s.product_id) ?? { name: s.product_name, qty: 0 };
+			const pid = String(s.product_id);
+			const cur = byProduct.get(pid) ?? { name: s.product_name ?? `Товар ${pid}`, qty: 0 };
 			cur.qty += Number(s.quantity);
-			byProduct.set(s.product_id, cur);
+			byProduct.set(pid, cur);
 		}
 		for (const [pid, { name, qty }] of byProduct) {
 			const h = history.find((x) => String(x.product_id) === pid);

@@ -32,3 +32,11 @@ class Sale(Base):
 
     product = relationship("Product", back_populates="sales")
     warehouse = relationship("Warehouse", back_populates="sales")
+
+    @property
+    def product_name(self) -> str | None:
+        return self.product.name if self.product is not None else None
+
+    @property
+    def category(self) -> str | None:
+        return self.product.category if self.product is not None else None
